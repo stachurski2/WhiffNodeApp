@@ -1,4 +1,3 @@
-App serves to authenticate and getting 
 
 Endpoint list:
 
@@ -26,7 +25,7 @@ parameters:
 
 - endDate(String)
 
-3.
+3.AddSensor
 
 method: POST 
 
@@ -34,9 +33,17 @@ url: /addSensor
 
 parameters:
 
-- sensorURl(String)
+- externalId(String)
 
-3. Remove sensor 
+- name(String)
+
+- location(String - optional)
+
+- locationLat(Double - optional)
+
+- locationLon(Double - optional)
+
+4. Remove sensor 
 
 method: DELETE 
 
@@ -44,5 +51,49 @@ url: /deleteSensor
 
 parameters:
 
-- sensorId(String)
+- externalId(String)
 
+5. Register User
+
+method: POST
+
+url: /registerUser
+
+parameters:
+
+- email(String)
+- password(String)
+- name(String - Optional)
+
+6. Login User
+
+method: GET
+
+url: /registerUser
+
+parameters:
+
+- email(String)
+- password(String)
+
+returns token
+
+6. Remind Password
+
+method: POST
+
+url: /resetPassword
+
+parameters:
+
+- email(String)
+
+7. Delete Password
+
+method: Delete
+
+url: /deleteUser
+
+parameters:
+
+- userId(String)
