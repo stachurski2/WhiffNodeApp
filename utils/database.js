@@ -19,7 +19,7 @@ class Database {
         let Sensor = require('../model/sensor');
         let SensorItem = require('../model/sensorItem');
 
-        User.hasMany(Sensor)
+        User.belongsToMany(Sensor, { through: SensorItem })
         Sensor.belongsToMany(User, { through: SensorItem })
         sequelize.sync()
         .then (user => {

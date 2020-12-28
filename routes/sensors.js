@@ -10,6 +10,8 @@ router.post('/addSensor', sensorController.addSensor);
 
 router.post('/addSensorToUser', sensorController.addSensorToUser);
 
+router.post('/removeSensorFromUser', sensorController.removeSensorFromUser);
+
 router.delete('/removeSensor', sensorController.removeSensor);
 
 exports.routes = router
