@@ -2,7 +2,7 @@ App serves to authenticate and getting
 
 Endpoint list:
 
-1. Get Sensor List 
+1. Sensor List 
 
 method: GET 
 
@@ -12,21 +12,21 @@ parameters:
 
 - userId (String)
 
-2. Get Sensor's url
+2. SensorData
 
 method: GET 
 
-url: /sensorUrl
+url: /sensorData
 
 parameters:
 
 - sensorId(String)
 
-- startDate(Date)
+- startDate(String)
 
-- endDate(Date)
+- endDate(String)
 
-3. Add sensor 
+3.
 
 method: POST 
 

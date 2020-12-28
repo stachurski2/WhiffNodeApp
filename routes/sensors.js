@@ -6,4 +6,10 @@ router.get('/sensorList', sensorController.getSensorListForUser);
 
 router.get('/sensorData', sensorController.getDataFromSensor);
 
+router.post('/addSensor', sensorController.addSensor);
+
+router.post('/addSensorToUser', sensorController.addSensorToUser);
+
+router.delete('/removeSensor', sensorController.removeSensor);
+
 exports.routes = router

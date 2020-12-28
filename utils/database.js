@@ -15,6 +15,12 @@ const sequelize = new Sequelize('d6ffj1t93fs2po','pjzvciwbdnbghn','d85a0866e870b
 class Database {
 
     static startRun(successCallback, failureCallBack) {
+        let User = require('../model/user');
+        let Sensor = require('../model/sensor');
+        let SensorItem = require('../model/sensorItem');
+
+        User.hasMany(Sensor)
+        Sensor.belongsToMany(User, { through: SensorItem })
         sequelize.sync()
         .then (user => {
             successCallback();

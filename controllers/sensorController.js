@@ -8,7 +8,7 @@ exports.getSensorListForUser = (req, res, next) => {
     if(userId) {
         res.status(200).json({"message": "You have just requested about sensor list for user with id: " + userId});
     } else {
-        res.status(200).json({"message": "You didn't set userId parameter in body."});
+        res.status(403).json({"message": "You didn't set userId parameter in body."});
     }
 };
 
@@ -21,7 +21,6 @@ exports.getDataFromSensor = (req, res, next) => {
             if(endDate) {
                  var url = obtainDataUrl(startDate, endDate, sensorId);
                  res.redirect(url);
-
             } else {
                 res.status(403).json({"message": "You didn't set endDate parameter in body."});
             }
@@ -33,6 +32,17 @@ exports.getDataFromSensor = (req, res, next) => {
    }
 }
 
+exports.addSensor = (req, res, next) => {
+    res.status(200).json({"message": "request succeeded"});
+}
+
+exports.addSensorToUser = (req, res, next) => {
+    res.status(200).json({"message": "request succeeded"});
+}
+
+exports.removeSensor = (req, res, next) => {
+    res.status(200).json({"message": "request succeeded"});
+}
 
 function obtainDataUrl(startDate, endDate, deviceId){
     return primaryDataUrl + startDatePamaterName + startDate + endDatePamaterName + endDate + deviceIdPamaterName + deviceId
