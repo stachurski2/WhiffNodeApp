@@ -40,7 +40,7 @@ exports.getDataFromSensor = (req, res, next) => {
 }
 
 exports.addSensor = (req, res, next) => {
-    let sensorId = req.body.sensorId 
+    let email = req.body.sensorId 
     let sensorName = req.body.sensorName
     let locationName = req.body.locationName
     let locationLat = req.body.locationLat
