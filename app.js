@@ -2,11 +2,17 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const authentication = require('./utils/authentication');
 const database = require('./utils/database');
 const sensorsRoutes = require('./routes/sensors');
 const userRoutes = require('./routes/user');
 
 const app = express();
+
+app.use((req, res, next) =>  {
+    return authentication.authentication.authorize(req, res, next)
+})
+
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
