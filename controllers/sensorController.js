@@ -69,7 +69,7 @@ exports.getDataFromSensor = (req, res, next) => {
 exports.addSensor = (req, res, next) => {
     if(req.user.isAdmin) {
         let sensorId = req.body.sensorId 
-        let sensorName = req.body.sensorNamec
+        let sensorName = req.body.sensorName
         let locationName = req.body.locationName
         let locationLat = req.body.locationLat
         let locationLon = req.body.locationLon
