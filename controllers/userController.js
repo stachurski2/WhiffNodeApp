@@ -1,5 +1,6 @@
 const User = require("../model/user");
 const Authentication = require("../utils/authentication");
+const Messenger = require("../utils/messenger");
 
 exports.getLogin = (req, res, next) => {
     var email = req.query.email 
@@ -21,7 +22,6 @@ exports.getLogin = (req, res, next) => {
     } else {
         res.status(400).json({"message": "You didn't set email"});
     }
-
 };
 
 exports.registerUser = (req, res, next) => {
@@ -65,9 +65,19 @@ exports.registerUser = (req, res, next) => {
     }
 }
 
-exports.remindPassword = (req, res, next) => {
-    //send email
-    res.status(200).json({"message": "request succeeded"});
+exports.remindPassword = (req, res, next) => {  
+    var email = req.body.email 
+    var emailTitle = "Whiff - password reset query"
+    var emailText = "Hello, \n \n Likely, you requested reset email. \n Link: www.google.com  \n If you didn't requested, ignore this email. \n Regards, \n Whiff Team \n \n Please do not reply this email. "
+    return User.findOne({ where: { email: email}}).then( user => {
+        if(user) {
+            Messenger.messenger.sendEmail(email, emailTitle, emailText).then( result => {   
+                res.status(200).json({"message": "request succeeded"});
+            })
+        } else {
+            res.status(200).json({"message": "request succeeded"});
+        }
+    })
 }
 
 exports.deleteUser = (req, res, next) => {
