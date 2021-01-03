@@ -1,8 +1,7 @@
+const KeyGenerator = require('uuid-key-generator');
 const User = require("../model/user");
 const Authentication = require("../utils/authentication");
 const Messenger = require("../utils/messenger");
-const os = require("os");
-const hostname = os.hostname();
 
 exports.getLogin = (req, res, next) => {
     var email = req.query.email 
@@ -70,16 +69,20 @@ exports.registerUser = (req, res, next) => {
 exports.remindPassword = (req, res, next) => {  
     var email = req.body.email 
     var emailTitle = "Whiff - password reset query"
-    var adress = "http://localhost:3000/resetPasswordForm"
-    var emailText = "Hello, \n \n Likely, you requested reset email. \n Link: " + adress + "\n If you didn't requested, ignore this email. \n Regards, \n Whiff Team \n \n Please do not reply this email. "
+    var keygen = new KeyGenerator()
     return User.findOne({ where: { email: email}}).then( user => {
         if(user) {
-            Messenger.messenger.sendEmail(email, emailTitle, emailText).then( result => {   
-                if(result.accepted.length > 0) {
-                     res.status(200).json({"message": "request succeeded"});
-                } else {
-                    res.status(500).json({ "message": "send email failed"});
-                }
+            user.resetPasswordKey = keygen.generateKey();
+            var adress = "https://whiffdev.herokuapp.com/resetPasswordForm?secret=" + user.resetPasswordKey; 
+            var emailText = "Hello, \n \n Likely, you requested reset email. \n Link: " + adress + "\n If you didn't requested, ignore this email. \n Regards, \n Whiff Team \n \n Please do not reply this email. "
+            return user.save().then( user => { 
+                Messenger.messenger.sendEmail(email, emailTitle, emailText).then( result => {   
+                    if(result.accepted.length > 0) {
+                        res.status(200).json({"message": "request succeeded"});
+                    } else {
+                        res.status(500).json({ "message": "send email failed"});
+                    }
+                })
             })
         } else {
             res.status(200).json({"message": "request succeeded"});
@@ -94,7 +97,7 @@ exports.deleteUser = (req, res, next) => {
             return User.findOne({ where: { id: userId }}).then( user => {
                 if(user) {
                     return user.destroy().then( result => {
-                        res.status(202).json({"message": "removed  object"});
+                        res.status(202).json({"message": "removed object"});
                     })
                 } else {
                     res.status(422).json({"message": "Didn't find user you requested"});
@@ -113,7 +116,7 @@ exports.userList = (req, res, next) => {
     if(req.user.isAdmin) {
         return User.findAll({ raw : true, nest : true }).then( users => {
             users.forEach( user => {
-                delete user['passwordHash']
+               // delete user['passwordHash']
             })
             res.status(200).json({"user":users});
         });
@@ -123,7 +126,33 @@ exports.userList = (req, res, next) => {
 }
 
 exports.saveNewPassword = (req, res, next) => {
-    res.status(200).json({"message":"success"});
+if(req.body.secret) {
+        return User.findOne({ where: { resetPasswordKey: req.body.secret }}).then( user => {
+            if(user) {
+                if(req.body.password == req.body.repeatPassword) {
+                    if(req.body.password.length > 3 ) {
+                        user.passwordHash = req.body.password
+                        user.resetPasswordKey = null
+                        return user.save().then( user => {
+                            if(user) {
+                                res.status(202).json("success");
+                            } else {
+                                res.status(500).json("failure");
+                            }
+                        })
+                    } else {
+                        res.status(400).json({"message": "Password must contain at least 3 characters."});
+                    }
+                } else {
+                    res.status(400).json({"message": "Passwords don't match."});
+                }
+            } else { 
+                res.status(403).json({"message": "Didn't find requested user"});
+            }
+        })
+    } else {
+        res.status(401).json({"message": "No rights to this operation"});
+    }
 }
 
 function validateEmail(email) {
