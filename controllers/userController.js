@@ -1,6 +1,8 @@
 const User = require("../model/user");
 const Authentication = require("../utils/authentication");
 const Messenger = require("../utils/messenger");
+const os = require("os");
+const hostname = os.hostname();
 
 exports.getLogin = (req, res, next) => {
     var email = req.query.email 
@@ -68,11 +70,16 @@ exports.registerUser = (req, res, next) => {
 exports.remindPassword = (req, res, next) => {  
     var email = req.body.email 
     var emailTitle = "Whiff - password reset query"
-    var emailText = "Hello, \n \n Likely, you requested reset email. \n Link: www.google.com  \n If you didn't requested, ignore this email. \n Regards, \n Whiff Team \n \n Please do not reply this email. "
+    var adress = "http://localhost:3000/resetPasswordForm"
+    var emailText = "Hello, \n \n Likely, you requested reset email. \n Link: " + adress + "\n If you didn't requested, ignore this email. \n Regards, \n Whiff Team \n \n Please do not reply this email. "
     return User.findOne({ where: { email: email}}).then( user => {
         if(user) {
             Messenger.messenger.sendEmail(email, emailTitle, emailText).then( result => {   
-                res.status(200).json({"message": "request succeeded"});
+                if(result.accepted.length > 0) {
+                     res.status(200).json({"message": "request succeeded"});
+                } else {
+                    res.status(500).json({ "message": "send email failed"});
+                }
             })
         } else {
             res.status(200).json({"message": "request succeeded"});
@@ -113,6 +120,10 @@ exports.userList = (req, res, next) => {
     } else {
         res.status(403).json({"message": "No rights to this operation."});
     }
+}
+
+exports.saveNewPassword = (req, res, next) => {
+    res.status(200).json({"message":"success"});
 }
 
 function validateEmail(email) {

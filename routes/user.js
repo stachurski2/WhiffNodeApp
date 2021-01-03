@@ -13,4 +13,6 @@ router.post('/resetPassword', userController.remindPassword);
 
 router.delete('/deleteUser', userController.deleteUser);
 
+router.post('/saveNewPassword', userController.saveNewPassword)
+
 exports.routes = router

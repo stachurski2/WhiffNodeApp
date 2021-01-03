@@ -1,7 +1,5 @@
 const Sequelize = require('sequelize');
 
-  
-
 class Authentication {
 
     static getTokenFor(email, password) {
@@ -10,8 +8,9 @@ class Authentication {
 
     static authorize(req, res, next) {
         const User = require('../model/user');
-        if(req.path == "/registerUser" || req.path == "/loginUser" || req.path == "/resetPassword") {
+        if(req.path == "/registerUser" || req.path == "/loginUser" || req.path == "/resetPassword" || req.path == "/resetPasswordForm" ||  req.path == "/saveNewPassword" || req.path == "/favicon.ico") {
             next();
+            return;
         } else {
             if (!req.headers.authorization || req.headers.authorization.indexOf('Basic ') === -1) {
                 res.status(401).json({ message: 'Missing Authorization Header' });
