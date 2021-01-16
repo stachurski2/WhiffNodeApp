@@ -69,7 +69,7 @@ parameters:
 
 method: GET
 
-url: /registerUser
+url: /loginUser
 
 parameters:
 

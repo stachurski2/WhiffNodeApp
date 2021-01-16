@@ -20,7 +20,7 @@ class Database {
 
         User.belongsToMany(Sensor, { through: SensorItem })
         Sensor.belongsToMany(User, { through: SensorItem })
-        sequelize.sync()
+        sequelize.sync({ alter: true })
         .then (user => {
             successCallback();
         }).catch( err => {

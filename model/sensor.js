@@ -28,6 +28,10 @@ const Sensor = database.sequelize.define('Sensor', {
     locationLon: {
         type: Sequelize.DOUBLE,
         allowNull: true
+    },
+    locationTimeZone: {
+        type: Sequelize.DOUBLE,
+        allowNull: true
     }
 });
 
