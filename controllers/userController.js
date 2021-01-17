@@ -3,18 +3,23 @@ const User = require("../model/user");
 const Authentication = require("../utils/authentication");
 const Messenger = require("../utils/messenger");
 
-exports.getLogin = (req, res, next) => {
-    var email = req.query.email 
+exports.login = (req, res, next) => {
+    var email = req.body.email 
     if(email) {
-        var password = req.query.password 
+        var password = req.body.password 
         if (password) {
             return User.findOne({ where: { email: email}}).then( user => {
-                if(user.passwordHash == password) {
-                    res.status(200).json({"message": "Authorization Succeded",
-                                         "token": Authentication.authentication.getTokenFor(email, password)});
+                if(user) {
+                    if(user.passwordHash == password) {
+                        res.status(200).json({"message": "Authorization Succeded",
+                                              "token": Authentication.authentication.getTokenFor(email, password),
+                                              "authMethod": "Basic"});
 
+                    } else {
+                        res.status(403).json({"message": "Bad credientials"});
+                    }
                 } else {
-                    res.status(401).json({"message": "Bad credientials"});
+                   res.status(403).json({"message": "Bad credientials"});
                 }
             })
         } else {
