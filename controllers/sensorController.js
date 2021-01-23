@@ -98,7 +98,7 @@ exports.getLastPieceOfDataFromSensor = (req, res, next) => {
                         return;
                     }
                     if(response.body["measures"]) {
-                        res.status(200).json({ "data": response.body["measures"][0]});
+                        res.status(200).json({ "data": response.body["measures"][response.body["measures"].length - 1]});
                         return;
                     } else {
                         res.status(500).json({"message":"Couldn't get to data provider"})    
@@ -106,7 +106,7 @@ exports.getLastPieceOfDataFromSensor = (req, res, next) => {
                     }  
                   });
             } else {
-                res.status(400).json({"message": "Didn't find sensur with requested external id."});
+                res.status(400).json({"message": "Didn't find sensor with requested external id."});
                 return 
             }
 
