@@ -32,17 +32,22 @@ exports.login = (req, res, next) => {
 
 exports.registerUser = (req, res, next) => {
     var email = req.body.email 
+    var name = req.body.name
+    if(name == null) {
+        name = "noname"
+    } 
+
     if(email) {
        if(validateEmail(email)) {
             var password = req.body.password 
             if (password) {
                if(password.length > 3 ) {
-                return User.findOne({ where: { email: email}}).then( user => {
+                return User.findOne({ where: { email: email }}).then( user => {
                     if(user) {
                         res.status(409).json({"message": "Email is already taken "});
                     } else {
                         return User.create({email: email,
-                        name: req.body.name,
+                        name: name,
                         passwordHash: password,
                         active: false,
                         isAdmin: Authentication.authentication.shouldBeAdmin(email)}).then(
