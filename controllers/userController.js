@@ -1,5 +1,6 @@
 const KeyGenerator = require('uuid-key-generator');
 const User = require("../model/user");
+const Sensor = require("../model/sensor");
 const Authentication = require("../utils/authentication");
 const Messenger = require("../utils/messenger");
 
@@ -51,11 +52,13 @@ exports.registerUser = (req, res, next) => {
                         passwordHash: password,
                         active: false,
                         isAdmin: Authentication.authentication.shouldBeAdmin(email)}).then(
-                            product => {
-                                if(product) {
+                            user => {
+                                if(user) {
+                                    addAllSensorsTo(user);
                                     res.status(201).json({"message": "Account created",
                                                             "token": Authentication.authentication.getTokenFor(email, password)});
-                                } else {
+                                                            
+                            } else {
                                     res.status(500).json({"message": "Database error"});
                                 }
                             }
@@ -168,4 +171,14 @@ if(req.body.secret) {
 function validateEmail(email) {
     const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
+}
+
+function addAllSensorsTo(user) { 
+    Sensor.findAll().then( sensors => {
+        if(sensors) {
+            sensors.forEach( sensor => {
+                user.addSensor(sensor);
+            });
+        };
+    });
 }
