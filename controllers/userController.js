@@ -168,6 +168,36 @@ if(req.body.secret) {
     }
 }
 
+exports.changePassword = (req, res, next) => {
+    let userId = req.user.id 
+    let password = req.body.password
+    if(userId) {
+        if(password) {
+        return User.findOne({ where: { id: userId }}).then( user => {
+            if(user) {
+                if(password > 3 ) {
+                    user.passwordHash = req.body.password
+                    return user.save().then( user => {
+                        if(user) {
+                             res.status(200).json({"message": "Password Changed",
+                                                     "token": Authentication.authentication.getTokenFor(user.email, req.body.password)});
+                        } else {
+                            res.status(500).json("failure");
+                        }
+                    })
+                }
+            } else {
+                res.status(400).json({"message": "Password too short."});
+            }
+        })
+        } else {
+            res.status(400).json({"message": "You didn't set password parameter in body."});
+        }
+    } else {
+        res.status(400).json({"message": "You didn't set userId parameter in body."});
+    }
+}
+
 function validateEmail(email) {
     const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
