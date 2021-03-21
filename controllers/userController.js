@@ -175,7 +175,7 @@ exports.changePassword = (req, res, next) => {
         if(password) {
         return User.findOne({ where: { id: userId }}).then( user => {
             if(user) {
-                if(password > 3 ) {
+                if(password.length > 3 ) {
                     user.passwordHash = req.body.password
                     return user.save().then( user => {
                         if(user) {
@@ -185,9 +185,11 @@ exports.changePassword = (req, res, next) => {
                             res.status(500).json("failure");
                         }
                     })
+                } else {
+                    res.status(400).json({"message": "Password too short."});
                 }
             } else {
-                res.status(400).json({"message": "Password too short."});
+                res.status(400).json({"message": "Didn't find requested user."});
             }
         })
         } else {
