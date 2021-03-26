@@ -3,9 +3,14 @@ const User = require("../model/user");
 const Request = require('request');
 
 const primaryDataUrl = "https://www.airqlab.pl/pag_api.php?"
+const primaryDataHistoricalUrl = "https://www.airqlab.pl/pgh_api.php?"
 const startDatePamaterName = "DateFrom=\""
 const endDatePamaterName = "\"&DateTo=\"" 
-const deviceIdPamaterName = "\"&DeviceId="
+
+const startDateParameterHistoricalUrl = "StartDate=\""
+const endDateParameterHistoricalUrl = "\"&EndDate=\"" 
+const deviceParameterHistoricalUrl = "\"&DeviceId="
+
 
 exports.getSensorListForUser = (req, res, next) => {
     let userId = req.user.id 
@@ -53,7 +58,7 @@ exports.getDataFromSensor = (req, res, next) => {
     if(sensorId) {
         if(startDate) {
             if(endDate) {
-                 var url = obtainDataUrl(startDate, endDate, sensorId);
+                 var url = obtainHistoricalDataUrl(startDate, endDate, sensorId);
                  Request(url, { json: true }, (err, response, body) => {
                     if (err) { 
                         res.status(500).json({"message":"Couldn't connect to data provider"})
@@ -232,4 +237,8 @@ exports.removeSensor = (req, res, next) => {
 
 function obtainDataUrl(startDate, endDate, deviceId){
     return primaryDataUrl + startDatePamaterName + startDate + endDatePamaterName + endDate + deviceIdPamaterName + deviceId
+}
+
+function obtainHistoricalDataUrl(startDate, endDate, deviceId){
+    return primaryDataHistoricalUrl + startDateParameterHistoricalUrl + startDate + endDateParameterHistoricalUrl + endDate + deviceParameterHistoricalUrl + deviceId
 }
