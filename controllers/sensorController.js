@@ -3,10 +3,11 @@ const User = require("../model/user");
 const Request = require('request');
 
 const primaryDataUrl = "https://www.airqlab.pl/pag_api.php?"
-const primaryDataHistoricalUrl = "https://www.airqlab.pl/pgh_api.php?"
-const startDatePamaterName = "DateFrom=\""
-const endDatePamaterName = "\"&DateTo=\"" 
+const startDateParamaterName = "DateFrom=\""
+const endDateParamaterName = "\"&DateTo=\"" 
+const deviceParameterUrl = "\"&DeviceId="
 
+const primaryDataHistoricalUrl = "https://www.airqlab.pl/pgh_api.php?"
 const startDateParameterHistoricalUrl = "StartDate=\""
 const endDateParameterHistoricalUrl = "\"&EndDate=\"" 
 const deviceParameterHistoricalUrl = "\"&DeviceId="
@@ -236,7 +237,7 @@ exports.removeSensor = (req, res, next) => {
 }
 
 function obtainDataUrl(startDate, endDate, deviceId){
-    return primaryDataUrl + startDatePamaterName + startDate + endDatePamaterName + endDate + deviceIdPamaterName + deviceId
+    return primaryDataUrl + startDateParamaterName + startDate + endDateParamaterName + endDate + deviceParameterUrl + deviceId
 }
 
 function obtainHistoricalDataUrl(startDate, endDate, deviceId){
