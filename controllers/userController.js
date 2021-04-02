@@ -3,22 +3,37 @@ const User = require("../model/user");
 const Sensor = require("../model/sensor");
 const Authentication = require("../utils/authentication");
 const Messenger = require("../utils/messenger");
-
+const bcrypt = require('bcryptjs');
+ 
 exports.login = (req, res, next) => {
     var email = req.body.email 
     if(email) {
         var password = req.body.password 
-        if (password) {
+ 
+        if (password) {  
             return User.findOne({ where: { email: email}}).then( user => {
                 if(user) {
-                    if(user.passwordHash == password) {
-                        res.status(200).json({"message": "Authorization Succeded",
-                                              "token": Authentication.authentication.getTokenFor(email, password),
-                                              "authMethod": "Basic"});
-
-                    } else {
-                        res.status(403).json({"message": "Bad credientials"});
-                    }
+                    bcrypt.hash(password, 12).then (hashedPassword => {
+                        if(hashedPassword) {
+                            if(user.passwordHash == password) {
+                                res.status(200).json({"message": "Authorization Succeded",
+                                                      "token": Authentication.authentication.getTokenFor(email, password),
+                                                      "authMethod": "Basic"});
+        
+                            } else {
+                                return bcrypt.compare(password, user.passwordHash).then( result => {
+                                    if(result == true) {
+                                        res.status(200).json({"message": "Authorization Succeded",
+                                        "token": Authentication.authentication.getTokenFor(email, password),
+                                        "authMethod": "Basic"});
+                                    } else {
+                                        res.status(401).json({"message": "Bad credientials"});
+                                    }
+                                })
+                            }
+                        } else {
+                            res.status(500).json({"message": "Internal error"})
+                        }})
                 } else {
                    res.status(403).json({"message": "Bad credientials"});
                 }
@@ -47,9 +62,11 @@ exports.registerUser = (req, res, next) => {
                     if(user) {
                         res.status(409).json({"message": "Email is already taken "});
                     } else {
+                        return bcrypt.hash(password, 12).then (hashedPassword => {
+                            if(hashedPassword) {
                         return User.create({email: email,
                         name: name,
-                        passwordHash: password,
+                        passwordHash: hashedPassword,
                         active: false,
                         isAdmin: Authentication.authentication.shouldBeAdmin(email)}).then(
                             user => {
@@ -63,7 +80,13 @@ exports.registerUser = (req, res, next) => {
                                 }
                             }
                         )
-                    }
+                            } else {
+                                res.status(500).json({"message": "Database error"});
+
+                            }
+
+                    }) 
+                    } 
                 })
                } else {
                    res.status(400).json({"message": "Password must contain at least 3 characters"});
@@ -144,15 +167,23 @@ if(req.body.secret) {
             if(user) {
                 if(req.body.password == req.body.repeatPassword) {
                     if(req.body.password.length > 3 ) {
-                        user.passwordHash = req.body.password
-                        user.resetPasswordKey = null
-                        return user.save().then( user => {
-                            if(user) {
-                                res.status(202).json("success");
+                        bcrypt(req.body.password,12).then(hashedPassword=>{
+                            if(hashedPassword) {
+                                user.passwordHash = hashedPassword
+                                user.resetPasswordKey = null
+                                return user.save().then( user => {
+                                    if(user) {
+                                        res.status(202).json("success");
+                                    } else {
+                                        res.status(500).json("failure");
+                                    }
+                                })
                             } else {
                                 res.status(500).json("failure");
                             }
                         })
+                       
+                        
                     } else {
                         res.status(400).json({"message": "Password must contain at least 3 characters."});
                     }
@@ -176,15 +207,22 @@ exports.changePassword = (req, res, next) => {
         return User.findOne({ where: { id: userId }}).then( user => {
             if(user) {
                 if(password.length > 3 ) {
-                    user.passwordHash = req.body.password
-                    return user.save().then( user => {
-                        if(user) {
-                             res.status(200).json({"message": "Password Changed",
-                                                     "token": Authentication.authentication.getTokenFor(user.email, req.body.password)});
+                    bcrypt.hash(password, 12).then (hashedPassword => {
+                        if(hashedPassword) {
+                            user.passwordHash = hashedPassword
+                            return user.save().then( user => {
+                                if(user) {
+                                     res.status(200).json({"message": "Password Changed",
+                                                             "token": Authentication.authentication.getTokenFor(user.email, req.body.password)});
+                                } else {
+                                    res.status(500).json("failure");
+                                }
+                            })
                         } else {
                             res.status(500).json("failure");
                         }
                     })
+              
                 } else {
                     res.status(400).json({"message": "Password too short."});
                 }

@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize');
-
+const bcrypt = require('bcryptjs');
+ 
 class Authentication {
 
     static getTokenFor(email, password) {
@@ -18,14 +19,24 @@ class Authentication {
             const base64Credentials = req.headers.authorization.split(' ')[1];
             const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
             const [username, password] = credentials.split(':');
-            return User.findOne({ where: { email: username }}).then( user => {
-                if(user.passwordHash == password) {
-                    req.user = user
-                    next();
-                } else {
-                    res.status(401).json({"message": "Bad credientials"});
-                }
-            })
+             bcrypt.hash(password, 12).then( hashedPassword => {
+                return User.findOne({ where: { email: username }}).then( user => {
+                    if(user.passwordHash == password) {
+                        req.user = user
+                        next();
+                    } else {
+                        return bcrypt.compare(password, user.passwordHash).then( result => {
+                            if(result == true) {
+                                req.user = user
+                                next();
+                            } else {
+                                res.status(401).json({"message": "Bad credientials"});
+                            }
+                        })
+                    }
+                })
+             })
+  
         }
     } 
 
