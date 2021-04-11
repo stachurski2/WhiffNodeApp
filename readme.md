@@ -47,7 +47,7 @@ parameters:
 
 method: DELETE 
 
-url: /deleteSensor
+url: /deleteSensor 
 
 parameters:
 

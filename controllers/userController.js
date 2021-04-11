@@ -8,8 +8,7 @@ const bcrypt = require('bcryptjs');
 exports.login = (req, res, next) => {
     var email = req.body.email 
     if(email) {
-        var password = req.body.password 
- 
+        var password = req.body.password
         if (password) {  
             return User.findOne({ where: { email: email}}).then( user => {
                 if(user) {
@@ -63,7 +62,7 @@ exports.registerUser = (req, res, next) => {
                         res.status(409).json({"message": "Email is already taken "});
                     } else {
                         return bcrypt.hash(password, 12).then (hashedPassword => {
-                            if(hashedPassword) {
+                            if(hashedPassword != null) {
                         return User.create({email: email,
                         name: name,
                         passwordHash: hashedPassword,
@@ -248,6 +247,10 @@ function addAllSensorsTo(user) {
         if(sensors) {
             sensors.forEach( sensor => {
                 user.addSensor(sensor);
+                if(sensor.externalIdentifier == "95") {
+                    user.mainSensorId = sensor.externalIdentifier;
+                    user.save();
+                }
             });
         };
     });

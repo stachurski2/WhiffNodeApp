@@ -15,7 +15,7 @@ const deviceParameterHistoricalUrl = "\"&DeviceId="
 
 exports.getSensorListForUser = (req, res, next) => {
     let userId = req.user.id 
-    if(userId) {
+    if(userId != null) {
         return User.findOne({ where: { id: userId }}).then( user => {
             if(user) {
                 user.getSensors().then( sensors => {
@@ -38,7 +38,7 @@ exports.getSensorListForUser = (req, res, next) => {
 };
 
 exports.getAllSensors = (req, res, next) => {
-    if(req.user.isAdmin) {
+    if(req.user.isAdmin == true) {
         return Sensor.findAll({ raw : true, nest : true }).then( sensors => {
             sensors.forEach( sensor => {
                 delete sensor['id']
@@ -56,7 +56,7 @@ exports.getDataFromSensor = (req, res, next) => {
     let sensorId = req.query.sensorId 
     let startDate = req.query.startDate
     let endDate = req.query.endDate
-    if(sensorId) {
+    if(sensorId != null) {
         if(startDate) {
             if(endDate) {
                  var url = obtainHistoricalDataUrl(startDate, endDate, sensorId);
@@ -87,7 +87,7 @@ exports.getDataFromSensor = (req, res, next) => {
 exports.getLastPieceOfDataFromSensor = (req, res, next) => {
     let sensorId = req.query.sensorId 
     let currentDate = new Date()
-    if(sensorId) {
+    if(sensorId != null) {
         return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
             if(sensor) {
                 if(sensor.locationTimeZone) {
@@ -122,6 +122,60 @@ exports.getLastPieceOfDataFromSensor = (req, res, next) => {
    }
 }
 
+exports.currentStateData = (req, res, next) => {
+    let userId = req.user.id 
+    if(userId != null) {
+        return User.findOne({ where: { id: userId }}).then( user => {
+            if(user) {
+                if(user.mainSensorId != null) {
+                    let currentDate = new Date()
+                    const sensorId = user.mainSensorId;
+                    if(sensorId) {
+                        return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
+                            if(sensor) {
+                                if(sensor.locationTimeZone) {
+                                    currentDate.setHours(currentDate.getHours() + sensor.locationTimeZone);
+                                }
+                                currentDate.setHours(currentDate.getHours() + 2);
+                                let endDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '')
+                                currentDate.setHours(currentDate.getHours() - 4);
+                                let startDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '')
+                                var url = obtainDataUrl(startDate, endDate, sensorId);
+                                Request(url, { json: true }, (err, response, body) => {
+                                    if (err) { 
+                                        res.status(500).json({"message":"Couldn't connect from data provider"})
+                                        return;
+                                    }
+                                    if(response.body["measures"]) {
+                                        res.status(200).json({ "data": response.body["measures"][response.body["measures"].length - 1]});
+                                        return;
+                                    } else {
+                                        res.status(500).json({"message":"Couldn't get data from provider"})    
+                                        return;              
+                                    }  
+                                  });
+                            } else {
+                                res.status(400).json({"message": "Didn't find sensor with requested external id."});
+                                return 
+                            }
+                
+                        })
+                    } else { 
+                        res.status(403).json({"message": "You didn't set sensorId parameter in body."});
+                   }
+                } else {
+                    res.status(400).json({"message": "User's main sensor is not set"});
+                }
+            } else {
+                res.status(400).json({"message": "Didn't find user with requested id."});
+            }
+        })
+    } else {
+        res.status(400).json({"message": "You didn't set userId parameter in body."});
+    }
+
+}
+
 exports.addSensor = (req, res, next) => {
     if(req.user.isAdmin) {
         let sensorId = req.body.sensorId 
@@ -131,7 +185,7 @@ exports.addSensor = (req, res, next) => {
         let locationLon = req.body.locationLon
         let locationTimeZone = req.body.locationTimeZone
 
-        if(sensorId) {
+        if(sensorId != null) {
             return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
                 if(sensor) {
                     res.status(409).json({"message": "Sensor already exists"});
@@ -159,14 +213,27 @@ exports.addSensorToUser = (req, res, next) => {
     if(req.user.isAdmin) {
         let sensorId = req.body.sensorId 
         let userId = req.body.userId
+        let defaultSensor = req.body.defaultSensor
         if(sensorId) {
             if(userId) {
                 return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
                     if(sensor) {
                         return User.findOne({ where: { id: userId }}).then( user => {
-                            if(user) {
-                                return user.addSensor(sensor).then( user => {
-                                    res.status(201).json({"message": "success"});
+                            if(user != null) {
+                                return user.addSensor(sensor).then( rawData => {
+                                    if(user.mainSensorId == null) {
+                                        user.mainSensorId = sensor.externalIdentifier; 
+                                    }
+                                    if(defaultSensor == true){
+                                        user.mainSensorId = sensor.externalIdentifier; 
+                                    }
+                                    user.save().then( user => {
+                                        if(user != null) {
+                                            res.status(201).json({"message": "success"});
+                                        } else {
+                                            res.status(500).json({"message": "server internal error"});
+                                        }
+                                    })
                                 })
                             } else {
                                 res.status(400).json({"message": "Didn't find requested user"});
@@ -197,7 +264,14 @@ exports.removeSensorFromUser = (req, res, next) => {
                     user.getSensors({ where:  { externalIdentifier: sensorId }}).then( sensors => {
                         if(sensors[0]) {
                             return user.removeSensor(sensors[0]).then( result => {
-                                res.status(201).json({"message": "Sensor deleted"});
+                                if(user.mainSensorId == sensors[0].externalIdentifier) {
+                                    user.mainSensorId = null
+                                    user.save().then( savedUser => {
+                                        res.status(201).json({"message": "Sensor deleted"});
+                                    });
+                                } else {
+                                    res.status(201).json({"message": "Sensor deleted"});
+                                }
                             })
                         } else {
                             res.status(400).json({"message": "Didn't find sensor with requested id."});
@@ -218,9 +292,9 @@ exports.removeSensorFromUser = (req, res, next) => {
 exports.removeSensor = (req, res, next) => {
     if(req.user.isAdmin) {
         let sensorId = req.query.sensorId 
-        if(sensorId) {
+        if(sensorId != null) {
             return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
-                if(sensor) {
+                if(sensor != null) {
                     return sensor.destroy().then( result => {
                         res.status(202).json({"message": "removed  object"});
                     })
@@ -233,6 +307,35 @@ exports.removeSensor = (req, res, next) => {
         }
     } else {
         res.status(403).json({"message": "No rights to this operation."});
+    }
+}
+
+exports.setSensorAsMain = (req, res, next) => {
+    let userId = req.user.id 
+    if(userId != null) {
+        let sensorId = req.body.sensorId 
+        if(sensorId != null) {
+            return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
+                if(sensor != null) {
+                   return User.findOne({ where: { id: userId }}).then( user => {
+                        if(user != null) {
+                            user.mainSensorId = sensorId
+                            return user.save().then(user => {
+                                res.status(201).json({"message": "Main sensor set"});
+                            })
+                        } else {
+                            res.status(500).json({"message": "Internal error"});
+                        }
+                   })
+                } else {
+                    res.status(422).json({"message": "Didn't find sensor you requested"});
+                }
+            })
+        } else {
+            res.status(400).json({"message": "Didn't set external sensorId"});
+        }
+    } else {
+
     }
 }
 
