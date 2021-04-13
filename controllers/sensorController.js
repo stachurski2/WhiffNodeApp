@@ -221,9 +221,6 @@ exports.addSensorToUser = (req, res, next) => {
                         return User.findOne({ where: { id: userId }}).then( user => {
                             if(user != null) {
                                 return user.addSensor(sensor).then( rawData => {
-                                    if(user.mainSensorId == null) {
-                                        user.mainSensorId = sensor.externalIdentifier; 
-                                    }
                                     if(defaultSensor == true){
                                         user.mainSensorId = sensor.externalIdentifier; 
                                     }
