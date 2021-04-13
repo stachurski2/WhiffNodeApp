@@ -32,6 +32,10 @@ const Sensor = database.sequelize.define('Sensor', {
     locationTimeZone: {
         type: Sequelize.DOUBLE,
         allowNull: true
+    },
+    isInsideBuilding: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true
     }
 });
 

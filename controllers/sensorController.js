@@ -178,19 +178,23 @@ exports.currentStateData = (req, res, next) => {
 
 exports.addSensor = (req, res, next) => {
     if(req.user.isAdmin) {
-        let sensorId = req.body.sensorId 
-        let sensorName = req.body.sensorName
-        let locationName = req.body.locationName
-        let locationLat = req.body.locationLat
-        let locationLon = req.body.locationLon
-        let locationTimeZone = req.body.locationTimeZone
-
+        const sensorId = req.body.sensorId 
+        const sensorName = req.body.sensorName
+        const locationName = req.body.locationName
+        const locationLat = req.body.locationLat
+        const locationLon = req.body.locationLon
+        const locationTimeZone = req.body.locationTimeZone
+        let insideBuilding = req.body.insideBuilding
+     
         if(sensorId != null) {
+            if(insideBuilding == null) {
+                res.status(400).json({"message": "Didn't set sensor insideBuilding parameter"});
+             } else {
             return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
                 if(sensor) {
                     res.status(409).json({"message": "Sensor already exists"});
                 } else {
-                return Sensor.create({ externalIdentifier: sensorId, name: sensorName, locationName: locationName, locationLat: locationLat, locationLon:locationLon, locationTimeZone: locationTimeZone }).then(
+                return Sensor.create({ externalIdentifier: sensorId, name: sensorName, locationName: locationName, locationLat: locationLat, locationLon:locationLon, locationTimeZone: locationTimeZone, isInsideBuilding: insideBuilding }).then(
                         product => {
                             if(product) {
                                 res.status(201).json({"message": "Sensor created"});
@@ -201,6 +205,7 @@ exports.addSensor = (req, res, next) => {
                     )
                 }
             })
+        }
         } else {
             res.status(400).json({"message": "Didn't set external sensorId"});
         }

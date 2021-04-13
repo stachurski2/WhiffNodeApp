@@ -42,7 +42,19 @@ class Database {
             sensors.forEach( sensor => {
                 console.log(sensor.id);
                 console.log(sensor.externalIdentifier);
+                if(sensor.isInsideBuilding == null) {
+                    console.log("migraton neeeded")
+                } else {
+                    console.log("migraton done")
+                }
+                console.log(sensor.isInsideBuilding);
+                if(sensor.externalIdentifier == 97) {
+                    sensor.isInsideBuilding = true;
+                    sensor.save();
+                }
                 if(sensor.externalIdentifier == 95) {
+                    sensor.isInsideBuilding = false;
+                    sensor.save()
                     User.findAll().then( users => {
                         users.forEach( user => {
                             console.log(user.email);
