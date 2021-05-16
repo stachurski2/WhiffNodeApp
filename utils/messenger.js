@@ -1,10 +1,12 @@
 var nodemailer = require('nodemailer');
 
 var transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.zenbox.pl",
+  port: 587,
+  secure: false,
   auth: {
-    user: 'stachurski2@gmail.com',
-    pass: 'qgzpfabmrqrpdrpg'
+    user: "noreply@whiff.zone",
+    pass: "xHT2lnNhN#FP"
   }
 });
 
