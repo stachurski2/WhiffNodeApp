@@ -9,7 +9,7 @@ class Authentication {
 
     static authorize(req, res, next) {
         const User = require('../model/user');
-        if(req.path == "/registerUser" || req.path == "/loginUser" || req.path == "/resetPassword" || req.path == "/resetPasswordForm" ||  req.path == "/saveNewPassword" || req.path == "/favicon.ico") {
+        if(req.path == "/registerUser" || req.path == "/loginUser" || req.path == "/resetPassword" || req.path == "/resetPasswordForm" ||  req.path == "/saveNewPassword" || req.path == "/favicon.ico" ||  req.path.split("/")[1] == "public") {
             next();
             return;
         } else {
