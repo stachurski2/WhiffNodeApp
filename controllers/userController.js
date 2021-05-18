@@ -70,7 +70,6 @@ exports.registerUser = (req, res, next) => {
                         isAdmin: Authentication.authentication.shouldBeAdmin(email)}).then(
                             user => {
                                 if(user) {
-                                    addAllSensorsTo(user);
                                     res.status(201).json({"message": "Account created",
                                                             "token": Authentication.authentication.getTokenFor(email, password)});
                                                             
@@ -237,21 +236,68 @@ exports.changePassword = (req, res, next) => {
     }
 }
 
+
+exports.requestDemo = (req, res, next) => {  
+    let userId = req.user.id 
+    if(userId) {
+        return User.findOne({ where: { id: userId }}).then( user => {
+            if(user) {
+                addDemoSensorsTo(user);
+                res.status(201).json({"message": "demo sensors added"});
+            } else {
+                res.status(400).json({"message": "Didn't find requested user."});
+            }
+        })
+    } else {
+        res.status(400).json({"message": "You didn't set userId parameter in body."});
+    }
+
+}
+
+exports.addSensor = (req, res, next) => {  
+    let userId = req.user.id 
+    let sensorId = req.body.sensorId 
+    if(userId) {
+        return User.findOne({ where: { id: userId }}).then( user => {
+            if(user) {
+                return Sensor.findOne({where: { externalIdentifier: sensorId}}).then( sensor => {
+                    if(sensor) {
+                        user.addSensor(sensor);
+                        if(sensor.isInsideBuilding == false) {
+                            user.mainSensorId = sensor.externalIdentifier;
+                        }
+                        user.save();
+                        res.status(201).json({"message": "sensor added"});
+                    } else {
+                        res.status(400).json({"message": "Didn't find requested sensor."});
+                    }
+                });
+            } else {
+                res.status(400).json({"message": "Didn't find requested user."});
+            }
+        });
+    } else {
+        res.status(400).json({"message": "You didn't set userId parameter in body."});
+    }
+}
+
 function validateEmail(email) {
     const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
 }
 
-function addAllSensorsTo(user) { 
-    Sensor.findAll().then( sensors => {
-        if(sensors) {
-            sensors.forEach( sensor => {
-                user.addSensor(sensor);
-                if(sensor.externalIdentifier == "95") {
+function addDemoSensorsTo(user) { 
+    Sensor.findOne({where: { externalIdentifier: 97}}).then( sensor => {
+        if(sensor) {
+            user.addSensor(sensor);
+            user.save();
+            Sensor.findOne({where: { externalIdentifier: 95}}).then( sensor => {
+                if(sensor) {
                     user.mainSensorId = sensor.externalIdentifier;
+                    user.addSensor(sensor);
                     user.save();
                 }
             });
-        };
+        } 
     });
 }

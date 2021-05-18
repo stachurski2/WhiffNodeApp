@@ -17,4 +17,8 @@ router.post('/saveNewPassword', userController.saveNewPassword)
 
 router.post('/changePassword', userController.changePassword)
 
+router.post('/requestDemo', userController.requestDemo);
+
+router.post('/requestAddSensor', userController.addSensor);
+
 exports.routes = router
