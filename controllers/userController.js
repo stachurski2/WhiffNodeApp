@@ -107,7 +107,7 @@ exports.remindPassword = (req, res, next) => {
     return User.findOne({ where: { email: email}}).then( user => {
         if(user) {
             user.resetPasswordKey = keygen.generateKey();
-            var adress = "https://whiffdev.herokuapp.com/resetPasswordForm?secret=" + user.resetPasswordKey; 
+            var adress = "https://whiffapp.herokuapp.com/resetPasswordForm?secret=" + user.resetPasswordKey; 
             var emailText = "Hello, \n \n Likely, you requested reset email. \n Link: " + adress + "\n If you didn't requested, ignore this email. \n Regards, \n Whiff Team \n \n Please do not reply this email. "
             return user.save().then( user => { 
                 Messenger.messenger.sendEmail(email, emailTitle, emailText).then( result => {   
