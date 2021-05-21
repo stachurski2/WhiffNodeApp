@@ -257,27 +257,32 @@ exports.requestDemo = (req, res, next) => {
 exports.addSensor = (req, res, next) => {  
     let userId = req.user.id 
     let sensorId = req.body.sensorId 
-    if(userId) {
-        return User.findOne({ where: { id: userId }}).then( user => {
-            if(user) {
-                return Sensor.findOne({where: { externalIdentifier: sensorId}}).then( sensor => {
-                    if(sensor) {
-                        user.addSensor(sensor);
-                        if(sensor.isInsideBuilding == false) {
-                            user.mainSensorId = sensor.externalIdentifier;
+    if(sensorId) {
+        if(userId) {
+            return User.findOne({ where: { id: userId }}).then( user => {
+                if(user) {
+                    return Sensor.findOne({where: { externalIdentifier: sensorId}}).then( sensor => {
+                        if(sensor) {
+                            user.addSensor(sensor);
+                            if(sensor.isInsideBuilding == false) {
+                                user.mainSensorId = sensor.externalIdentifier;
+                            }
+                            user.save();
+                            res.status(201).json({"message": "sensor added"});
+                        } else {
+                            res.status(400).json({"message": "Didn't find requested sensor."});
                         }
-                        user.save();
-                        res.status(201).json({"message": "sensor added"});
-                    } else {
-                        res.status(400).json({"message": "Didn't find requested sensor."});
-                    }
-                });
-            } else {
-                res.status(400).json({"message": "Didn't find requested user."});
-            }
-        });
+                    });
+                } else {
+                    res.status(400).json({"message": "Didn't find requested user."});
+                }
+            });
+        } else {
+            res.status(400).json({"message": "You didn't set userId parameter in body."});
+        }
     } else {
-        res.status(400).json({"message": "You didn't set userId parameter in body."});
+        res.status(400).json({"message": "You didn't set sensorId."});
+
     }
 }
 
