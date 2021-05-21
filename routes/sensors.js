@@ -16,8 +16,6 @@ router.post('/addSensor', sensorController.addSensor);
 
 router.post('/addSensorToUser', sensorController.addSensorToUser);
 
-//router.post('/setSensorAsMain', sensorController.setSensorAsMain);
-
 router.post('/removeSensorFromUser', sensorController.removeSensorFromUser);
 
 router.delete('/removeSensor', sensorController.removeSensor);

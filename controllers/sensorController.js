@@ -25,6 +25,7 @@ exports.getSensorListForUser = (req, res, next) => {
                         delete sensor['createdAt']
                         delete sensor['updatedAt']
                         delete sensor['SensorItem']
+                        delete sensor['key']
                     })
                     res.status(200).json({"sensors":sensorsJson});
                 })
@@ -184,6 +185,7 @@ exports.addSensor = (req, res, next) => {
         const locationLat = req.body.locationLat
         const locationLon = req.body.locationLon
         const locationTimeZone = req.body.locationTimeZone
+        const userKey = req.body.userKey
         let insideBuilding = req.body.insideBuilding
      
         if(sensorId != null) {
@@ -194,7 +196,7 @@ exports.addSensor = (req, res, next) => {
                 if(sensor) {
                     res.status(409).json({"message": "Sensor already exists"});
                 } else {
-                return Sensor.create({ externalIdentifier: sensorId, name: sensorName, locationName: locationName, locationLat: locationLat, locationLon:locationLon, locationTimeZone: locationTimeZone, isInsideBuilding: insideBuilding }).then(
+                return Sensor.create({ externalIdentifier: sensorId, name: sensorName, locationName: locationName, locationLat: locationLat, locationLon:locationLon, locationTimeZone: locationTimeZone, isInsideBuilding: insideBuilding, key: userKey }).then(
                         product => {
                             if(product) {
                                 res.status(201).json({"message": "Sensor created"});

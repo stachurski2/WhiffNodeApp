@@ -257,21 +257,67 @@ exports.requestDemo = (req, res, next) => {
 exports.addSensor = (req, res, next) => {  
     let userId = req.user.id 
     let sensorId = req.body.sensorId 
+    let key = req.body.sensorKey
+    if(key) {
+        if(sensorId) {
+            if(userId) {
+                return User.findOne({ where: { id: userId }}).then( user => {
+                    if(user) {
+                        return Sensor.findOne({where: { externalIdentifier: sensorId}}).then( sensor => {
+                            if(sensor) {
+                                if(sensor.key == key) {
+                                    user.addSensor(sensor);
+                                    if(sensor.isInsideBuilding == false) {
+                                        user.mainSensorId = sensor.externalIdentifier;
+                                    }
+                                    user.save();
+                                    res.status(201).json({"message": "sensor added"});
+                                } else {
+                                    res.status(400).json({"message": "Invalid sensor key"});
+
+                                }
+                            } else {
+                                res.status(400).json({"message": "Didn't find requested sensor."});
+                            }
+                        });
+                    } else {
+                        res.status(400).json({"message": "Didn't find requested user."});
+                    }
+                });
+            } else {
+                res.status(400).json({"message": "You didn't set userId parameter in body."});
+            }
+        } else {
+            res.status(400).json({"message": "You didn't set sensorId."});
+        }
+    } else {
+        res.status(400).json({"message": "You didn't set sensorKey."});
+
+    }
+}
+
+exports.deleteSensor = (req, res, next) => {  
+    let userId = req.user.id 
+    let sensorId = req.body.sensorId 
     if(sensorId) {
         if(userId) {
             return User.findOne({ where: { id: userId }}).then( user => {
                 if(user) {
-                    return Sensor.findOne({where: { externalIdentifier: sensorId}}).then( sensor => {
-                        if(sensor) {
-                            user.addSensor(sensor);
-                            if(sensor.isInsideBuilding == false) {
-                                user.mainSensorId = sensor.externalIdentifier;
+                    return user.getSensors({ where:  { externalIdentifier: sensorId }}).then( sensors => {
+                            if(sensors[0]) {
+                                return user.removeSensor(sensors[0]).then( result => {
+                                    if(user.mainSensorId == sensors[0].externalIdentifier) {
+                                        user.mainSensorId = null
+                                        user.save().then( savedUser => {
+                                            res.status(201).json({"message": "Sensor deleted"});
+                                        });
+                                    } else {
+                                        res.status(201).json({"message": "Sensor deleted"});
+                                    }
+                                })
+                            } else {
+                                res.status(400).json({"message": "Didn't find sensor with requested id."});
                             }
-                            user.save();
-                            res.status(201).json({"message": "sensor added"});
-                        } else {
-                            res.status(400).json({"message": "Didn't find requested sensor."});
-                        }
                     });
                 } else {
                     res.status(400).json({"message": "Didn't find requested user."});
@@ -282,8 +328,8 @@ exports.addSensor = (req, res, next) => {
         }
     } else {
         res.status(400).json({"message": "You didn't set sensorId."});
-
     }
+
 }
 
 function validateEmail(email) {

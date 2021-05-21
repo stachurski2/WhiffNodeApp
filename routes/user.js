@@ -21,4 +21,6 @@ router.post('/requestDemo', userController.requestDemo);
 
 router.post('/requestAddSensor', userController.addSensor);
 
+router.post('/requestDeleteSensor', userController.deleteSensor);
+
 exports.routes = router

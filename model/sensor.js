@@ -13,6 +13,10 @@ const Sensor = database.sequelize.define('Sensor', {
         type: Sequelize.INTEGER,
         allowNull: false
     },
+    key: {
+        type: Sequelize.STRING,
+        allowNull: true
+    },
     name: {
         type: Sequelize.STRING,
         allowNull: true
