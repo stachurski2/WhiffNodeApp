@@ -38,10 +38,10 @@ exports.login = (req, res, next) => {
                 }
             })
         } else {
-            res.status(400).json({"message": "You didn't set password"});
+            res.status(400).json({"message": "You didn't set the password"});
         }
     } else {
-        res.status(400).json({"message": "You didn't set email"});
+        res.status(400).json({"message": "You didn't set the email adress"});
     }
 };
 
@@ -82,7 +82,6 @@ exports.registerUser = (req, res, next) => {
                                 res.status(500).json({"message": "Database error"});
 
                             }
-
                     }) 
                     } 
                 })
@@ -90,13 +89,13 @@ exports.registerUser = (req, res, next) => {
                    res.status(400).json({"message": "Password must contain at least 3 characters"});
                }
             } else {
-                res.status(400).json({"message": "You didn't set password"});
+                res.status(400).json({"message": "You didn't set the password"});
             }
        } else {
           res.status(400).json({"message": "email incorrect"});
        }
     } else {
-        res.status(400).json({"message": "You didn't set email"});
+        res.status(400).json({"message": "You didn't set the email adress"});
     }
 }
 
@@ -229,10 +228,10 @@ exports.changePassword = (req, res, next) => {
             }
         })
         } else {
-            res.status(400).json({"message": "You didn't set password parameter in body."});
+            res.status(400).json({"message": "You didn't set the password parameter in body."});
         }
     } else {
-        res.status(400).json({"message": "You didn't set userId parameter in body."});
+        res.status(400).json({"message": "You didn't set the userId parameter in body."});
     }
 }
 
@@ -285,13 +284,13 @@ exports.addSensor = (req, res, next) => {
                     }
                 });
             } else {
-                res.status(400).json({"message": "You didn't set userId parameter in body."});
+                res.status(400).json({"message": "You didn't set the userId parameter in body."});
             }
         } else {
-            res.status(400).json({"message": "You didn't set sensorId."});
+            res.status(400).json({"message": "You didn't set the sensorId."});
         }
     } else {
-        res.status(400).json({"message": "You didn't set sensorKey."});
+        res.status(400).json({"message": "You didn't set the sensorKey."});
 
     }
 }
@@ -324,10 +323,10 @@ exports.deleteSensor = (req, res, next) => {
                 }
             });
         } else {
-            res.status(400).json({"message": "You didn't set userId parameter in body."});
+            res.status(400).json({"message": "You didn't set the userId parameter in body."});
         }
     } else {
-        res.status(400).json({"message": "You didn't set sensorId."});
+        res.status(400).json({"message": "You didn't set the sensorId."});
     }
 
 }
@@ -338,17 +337,10 @@ function validateEmail(email) {
 }
 
 function addDemoSensorsTo(user) { 
-    Sensor.findOne({where: { externalIdentifier: 97}}).then( sensor => {
+    Sensor.findOne({where: { externalIdentifier: 98}}).then( sensor => {
         if(sensor) {
             user.addSensor(sensor);
             user.save();
-            Sensor.findOne({where: { externalIdentifier: 95}}).then( sensor => {
-                if(sensor) {
-                    user.mainSensorId = sensor.externalIdentifier;
-                    user.addSensor(sensor);
-                    user.save();
-                }
-            });
         } 
     });
 }

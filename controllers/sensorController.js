@@ -34,7 +34,7 @@ exports.getSensorListForUser = (req, res, next) => {
             }
         })
     } else {
-        res.status(400).json({"message": "You didn't set userId parameter in body."});
+        res.status(400).json({"message": "You didn't set the userId parameter in body."});
     }
 };
 
@@ -75,13 +75,13 @@ exports.getDataFromSensor = (req, res, next) => {
                     }  
                   });
             } else {
-                res.status(400).json({"message": "You didn't set endDate parameter in body."});
+                res.status(400).json({"message": "You didn't set the endDate parameter in body."});
             }
         } else {
-            res.status(400).json({"message": "You didn't set startDate parameter in body."});
+            res.status(400).json({"message": "You didn't set the startDate parameter in body."});
         }   
     } else { 
-        res.status(400).json({"message": "You didn't set sensorId parameter in body."});
+        res.status(400).json({"message": "You didn't set the sensorId parameter in body."});
    }
 }
 
@@ -113,13 +113,13 @@ exports.getLastPieceOfDataFromSensor = (req, res, next) => {
                     }  
                   });
             } else {
-                res.status(400).json({"message": "Didn't find sensor with requested external id."});
+                res.status(400).json({"message": "Didn't find any sensor with requested external id."});
                 return 
             }
 
         })
     } else { 
-        res.status(403).json({"message": "You didn't set sensorId parameter in body."});
+        res.status(403).json({"message": "You didn't set the sensorId parameter in body."});
    }
 }
 
@@ -172,7 +172,7 @@ exports.currentStateData = (req, res, next) => {
             }
         })
     } else {
-        res.status(400).json({"message": "You didn't set userId parameter in body."});
+        res.status(400).json({"message": "You didn't set the userId parameter in body."});
     }
 
 }
@@ -286,7 +286,7 @@ exports.removeSensorFromUser = (req, res, next) => {
                 }
             })
         } else {
-            res.status(400).json({"message": "You didn't set userId parameter in body."});
+            res.status(400).json({"message": "You didn't set the userId parameter in body."});
         }
     } else {
         res.status(403).json({"message": "No rights to this operation."});
