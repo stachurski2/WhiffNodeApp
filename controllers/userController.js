@@ -164,7 +164,7 @@ if(req.body.secret) {
             if(user) {
                 if(req.body.password == req.body.repeatPassword) {
                     if(req.body.password.length > 3 ) {
-                        bcrypt(req.body.password,12).then(hashedPassword=>{
+                        bcrypt.hash(req.body.password,12).then(hashedPassword=>{
                             if(hashedPassword) {
                                 user.passwordHash = hashedPassword
                                 user.resetPasswordKey = null
