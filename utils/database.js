@@ -22,6 +22,14 @@ class Database {
         Sensor.belongsToMany(User, { through: SensorItem })
         sequelize.sync({ alter: true }).then (result => {
             Database.runMigration();
+             User.findAll({ raw : true, nest : true }).then( users => {
+                    users.forEach( user => {
+                        console.log(user.email);
+                        console.log(user.id);
+
+                    });
+                 });
+       
             successCallback();
         }).catch( err => {
             console.log(err);

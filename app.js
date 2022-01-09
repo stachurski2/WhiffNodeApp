@@ -6,6 +6,8 @@ const authentication = require('./utils/authentication');
 const database = require('./utils/database');
 const sensorsRoutes = require('./routes/sensors');
 const userRoutes = require('./routes/user');
+const dasboardRoutes = require('./routes/dashboard');
+
 const resetPasswordRoutes = require('./routes/resetPassword');
 
 const app = express();
@@ -14,13 +16,13 @@ app.use((req, res, next) =>  {
     return authentication.authentication.authorize(req, res, next)
 })
 
-
 app.use(bodyParser.urlencoded({extended: true}));
 app.use('/public', express.static(__dirname + '/public'));
 
 app.use(bodyParser.json());
 app.use(sensorsRoutes.routes);
 app.use(userRoutes.routes);
+app.use(dasboardRoutes.routes);
 
 app.set('view engine', 'ejs');
 app.set('views','views');
