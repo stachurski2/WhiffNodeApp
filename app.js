@@ -7,6 +7,7 @@ const database = require('./utils/database');
 const sensorsRoutes = require('./routes/sensors');
 const userRoutes = require('./routes/user');
 const dasboardRoutes = require('./routes/dashboard');
+const cookieParser = require('cookie-parser')
 
 const resetPasswordRoutes = require('./routes/resetPassword');
 
@@ -20,6 +21,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use('/public', express.static(__dirname + '/public'));
 
 app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(sensorsRoutes.routes);
 app.use(userRoutes.routes);
 app.use(dasboardRoutes.routes);
@@ -32,6 +34,7 @@ app.use(resetPasswordRoutes.routes);
 app.use((req, res, next) => {
     res.status(400).json({"message": "Bad request"});
  });
+
 
  database.database.startRun( () => {
     app.listen(process.env.PORT || 3000);

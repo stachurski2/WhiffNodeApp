@@ -7,4 +7,7 @@ router.get('/public/dashboard', dashboardController.loginForm);
 
 router.post('/public/loginRequest', dashboardController.loginRequest);
 
+router.post('/public/logoutRequest', dashboardController.logoutRequest);
+
+
 exports.routes = router
