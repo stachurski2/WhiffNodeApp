@@ -1,0 +1,1 @@
+web: DATABASENAME=da3a5ttkqjb75 DATABASELOGIN=aknmfhbxkdgykz DATABASEPASSWORD=a85197736f17034381e6b4eb46914a8edbc836056e09af19c06134ce46abe2aa DATABASEHOST=ec2-34-253-148-186.eu-west-1.compute.amazonaws.com EMAILHOST=smtp.zenbox.pl EMAIL=noreply@whiff.zone EMAILPASSWORD=xHT2lnNhN#FP npm start
