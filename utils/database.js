@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 
-const sequelize = new Sequelize('da3a5ttkqjb75','aknmfhbxkdgykz','a85197736f17034381e6b4eb46914a8edbc836056e09af19c06134ce46abe2aa', {
-    host: 'ec2-34-253-148-186.eu-west-1.compute.amazonaws.com',
+const sequelize = new Sequelize(process.env.DATABASENAME, process.env.DATABASELOGIN, process.env.DATABASEPASSWORD, {
+    host: process.env.DATABASEHOST,
     dialect: 'postgres',
     protocol: 'postgres',
     dialectOptions: {

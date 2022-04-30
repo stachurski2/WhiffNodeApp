@@ -8,7 +8,7 @@ const bcrypt = require('bcryptjs');
 exports.login = (req, res, next) => {
     var email = req.body.email 
     if(email) {
-        var password = req.body.password
+        const password = req.body.password
         if (password) {  
             return User.findOne({ where: { email: email}}).then( user => {
                 if(user) {
@@ -54,7 +54,7 @@ exports.registerUser = (req, res, next) => {
 
     if(email) {
        if(validateEmail(email)) {
-            var password = req.body.password 
+            const password = req.body.password 
             if (password) {
                if(password.length > 3 ) {
                 return User.findOne({ where: { email: email }}).then( user => {
