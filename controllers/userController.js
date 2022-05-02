@@ -6,7 +6,7 @@ const Messenger = require("../utils/messenger");
 const bcrypt = require('bcryptjs');
  
 exports.login = (req, res, next) => {
-    var email = req.body.email 
+    const email = req.body.email 
     if(email) {
         const password = req.body.password
         if (password) {  
@@ -165,7 +165,7 @@ if(req.body.secret) {
             if(user) {
                 if(req.body.password == req.body.repeatPassword) {
                     if(req.body.password.length > 3 ) {
-                        bcrypt(req.body.password,12).then(hashedPassword=>{
+                        bcrypt.hash(req.body.password,12).then(hashedPassword=>{
                             if(hashedPassword) {
                                 user.passwordHash = hashedPassword
                                 user.resetPasswordKey = null

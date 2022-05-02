@@ -1,6 +1,12 @@
 const Sensor = require('../model/sensor');
 const User = require("../model/user");
 const Request = require('request');
+var dayjs = require('dayjs');
+var utc = require('dayjs/plugin/utc');
+
+
+
+var timezone = require('timezone');
 
 const primaryDataUrl = "https://www.airqlab.pl/pag_api.php?"
 const startDateParamaterName = "DateFrom=\""
@@ -86,18 +92,17 @@ exports.getDataFromSensor = (req, res, next) => {
 }
 
 exports.getLastPieceOfDataFromSensor = (req, res, next) => {
-    let sensorId = req.query.sensorId 
-    let currentDate = new Date()
+    const sensorId = req.query.sensorId 
+;
     if(sensorId != null) {
         return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
             if(sensor) {
+                let currentDate = new dayjs().add(sensor.locationTimeZone, 'hour');
                 if(sensor.locationTimeZone) {
-                    currentDate.setHours(currentDate.getHours() + sensor.locationTimeZone);
+                    currentDate.add(sensor.locationTimeZone, 'hour');
                 }
-                currentDate.setHours(currentDate.getHours() + 2);
-                let endDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '')
-                currentDate.setHours(currentDate.getHours() - 4);
-                let startDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '')
+                const endDate = currentDate.add(2,'hour').format('YYYY-MM-DD HH:mm:ss');
+                const startDate = currentDate.add(-2,'hour').format('YYYY-MM-DD HH:mm:ss');
                 var url = obtainDataUrl(startDate, endDate, sensorId);
                 Request(url, { json: true }, (err, response, body) => {
                     if (err) { 
@@ -344,6 +349,8 @@ exports.setSensorAsMain = (req, res, next) => {
 }
 
 function obtainDataUrl(startDate, endDate, deviceId){
+    console.log(startDate);
+    console.log(endDate);
     return primaryDataUrl + startDateParamaterName + startDate + endDateParamaterName + endDate + deviceParameterUrl + deviceId
 }
 

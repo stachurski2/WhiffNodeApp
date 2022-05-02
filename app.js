@@ -32,7 +32,7 @@ app.use((req, res, next) => {
  });
 
  database.database.startRun( () => {
-    console.log(process.argv);
+    process.env.TZ = 'UTC'
     app.listen(process.env.PORT || 3000);
 }, (error) => {
     console.log(err);
