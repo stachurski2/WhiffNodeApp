@@ -1,12 +1,9 @@
 const Sensor = require('../model/sensor');
 const User = require("../model/user");
 const Request = require('request');
+const got = require('got');
+
 var dayjs = require('dayjs');
-var utc = require('dayjs/plugin/utc');
-
-
-
-var timezone = require('timezone');
 
 const primaryDataUrl = "https://www.airqlab.pl/pag_api.php?"
 const startDateParamaterName = "DateFrom=\""
@@ -19,12 +16,13 @@ const endDateParameterHistoricalUrl = "\"&EndDate=\""
 const deviceParameterHistoricalUrl = "\"&DeviceId="
 
 
-exports.getSensorListForUser = (req, res, next) => {
-    let userId = req.user.id 
+exports.getSensorListForUser = async (req, res, next) => {
+    const userId = req.user.id 
     if(userId != null) {
-        return User.findOne({ where: { id: userId }}).then( user => {
+        const user = await User.findOne({ where: { id: userId }})
             if(user) {
-                user.getSensors().then( sensors => {
+                let sensors = await user.getSensors()
+                if(sensors){
                     let sensorsJson = sensors.map( sensor => { return sensor.toJSON()})
                     sensorsJson.forEach( sensor => {
                         delete sensor['id']
@@ -34,155 +32,140 @@ exports.getSensorListForUser = (req, res, next) => {
                         delete sensor['key']
                     })
                     res.status(200).json({"sensors":sensorsJson});
-                })
-            } else {
+                    return
+                }
                 res.status(400).json({"message": "Didn't find user with requested id."});
+                return
             }
-        })
-    } else {
-        res.status(400).json({"message": "You didn't set userId parameter in body."});
-    }
+            res.status(500).json({"message": "internal error."});
+            return;
+        }
+    res.status(400).json({"message": "You didn't set userId parameter in body."});
 };
 
-exports.getAllSensors = (req, res, next) => {
+exports.getAllSensors = async (req, res, next) => {
     if(req.user.isAdmin == true) {
-        return Sensor.findAll({ raw : true, nest : true }).then( sensors => {
-            sensors.forEach( sensor => {
-                delete sensor['id']
-                delete sensor['createdAt']
-                delete sensor['updatedAt']
-            })
-            res.status(200).json({"sensors":sensors});
-         })
-    } else {
-        res.status(403).json({"message": "No rights to this operation."});
-    }
+        const sensors = await Sensor.findAll({ raw : true, nest : true }) //.then( sensors => {
+        sensors.forEach( sensor => {
+            delete sensor['id']
+            delete sensor['createdAt']
+            delete sensor['updatedAt']
+        })
+        res.status(200).json({"sensors":sensors});
+        return   
+    } 
+    res.status(403).json({"message": "No rights to this operation."});
 };
 
-exports.getDataFromSensor = (req, res, next) => {
-    let sensorId = req.query.sensorId 
-    let startDate = req.query.startDate
-    let endDate = req.query.endDate
-    if(sensorId != null) {
+exports.getDataFromSensor = async (req, res, next) => {
+    const sensorId = req.query.sensorId 
+    const startDate = req.query.startDate
+    const endDate = req.query.endDate
+    if(sensorId) {
         if(startDate) {
             if(endDate) {
-                 var url = obtainHistoricalDataUrl(startDate, endDate, sensorId);
-                 Request(url, { json: true }, (err, response, body) => {
-                    if (err) { 
-                        res.status(500).json({"message":"Couldn't connect to data provider"})
-                        return;
-                    }
-                    if(response.body) {
-                        res.status(200).json({ "data": response.body });
-                        return;
-                    } else {
-                        res.status(500).json({"message":"Couldn't get to data provider"})    
-                        return;              
-                    }  
-                  });
-            } else {
-                res.status(400).json({"message": "You didn't set endDate parameter in body."});
+                const url = obtainHistoricalDataUrl(startDate, endDate, sensorId);
+                const [err, response, body] = await Request(url, { json: true })
+                if (err) { 
+                    res.status(500).json({"message":"Couldn't connect to data provider"})
+                    return
+                }
+                if(response.body) {
+                    res.status(200).json({ "data": response.body });
+                    return
+                } 
+                res.status(500).json({"message":"Couldn't get to data provider"})    
+                return            
+                     
+                  
             }
-        } else {
-            res.status(400).json({"message": "You didn't set startDate parameter in body."});
+             res.status(400).json({"message": "You didn't set endDate parameter in body."});
+             return
+            }
+         res.status(400).json({"message": "You didn't set startDate parameter in body."});
+         return
         }   
-    } else { 
-        res.status(400).json({"message": "You didn't set sensorId parameter in body."});
-   }
+    res.status(400).json({"message": "You didn't set sensorId parameter in body."});
 }
 
-exports.getLastPieceOfDataFromSensor = (req, res, next) => {
+exports.getLastPieceOfDataFromSensor = async (req, res, next) => {
     const sensorId = req.query.sensorId 
-;
     if(sensorId != null) {
-        return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
+        const sensor = await Sensor.findOne({ where: { externalIdentifier: sensorId }})
             if(sensor) {
                 let currentDate = new dayjs().add(sensor.locationTimeZone, 'hour');
                 if(sensor.locationTimeZone) {
-                    currentDate.add(sensor.locationTimeZone, 'hour');
+                    currentDate = currentDate.add(sensor.locationTimeZone,'hour');
                 }
                 const endDate = currentDate.add(2,'hour').format('YYYY-MM-DD HH:mm:ss');
                 const startDate = currentDate.add(-2,'hour').format('YYYY-MM-DD HH:mm:ss');
-                var url = obtainDataUrl(startDate, endDate, sensorId);
-                Request(url, { json: true }, (err, response, body) => {
-                    if (err) { 
-                        res.status(500).json({"message":"Couldn't connect to data provider"})
-                        return;
-                    }
-                    if(response.body["measures"]) {
-                        res.status(200).json({ "data": response.body["measures"][response.body["measures"].length - 1]});
-                        return;
-                    } else {
+                const url = obtainDataUrl(startDate, endDate, sensorId);
+                try {
+                    const response = await got(url, { json: true });
+                        if(response.body["measures"]) {
+                            res.status(200).json({ "data": response.body["measures"][response.body["measures"].length - 1]});
+                            return;
+                        } 
                         res.status(500).json({"message":"Couldn't get to data provider"})    
-                        return;              
-                    }  
-                  });
-            } else {
-                res.status(400).json({"message": "Didn't find sensor with requested external id."});
-                return 
-            }
-
-        })
-    } else { 
-        res.status(403).json({"message": "You didn't set sensorId parameter in body."});
-   }
+                        return;                
+                } catch (error) {
+                    res.status(500).json({"message":"Couldn't connect to data provider"})
+                    return;
+                }
+            } 
+            res.status(400).json({"message": "Didn't find sensor with requested external id."});
+            return 
+        } 
+    res.status(403).json({"message": "You didn't set sensorId parameter in body."});
 }
 
-exports.currentStateData = (req, res, next) => {
-    let userId = req.user.id 
+exports.currentStateData = async (req, res, next) => {
+    const userId = req.user.id 
     if(userId != null) {
-        return User.findOne({ where: { id: userId }}).then( user => {
+        const user = await User.findOne({ where: { id: userId }})
             if(user) {
                 if(user.mainSensorId != null) {
                     let currentDate = new Date()
                     const sensorId = user.mainSensorId;
                     if(sensorId) {
-                        return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
+                        const sensor = await Sensor.findOne({ where: { externalIdentifier: sensorId }})
                             if(sensor) {
+                                let currentDate = new dayjs().add(sensor.locationTimeZone, 'hour');
                                 if(sensor.locationTimeZone) {
-                                    currentDate.setHours(currentDate.getHours() + sensor.locationTimeZone);
+                                    currentDate = currentDate.add(sensor.locationTimeZone,'hour');
                                 }
-                                currentDate.setHours(currentDate.getHours() + 2);
-                                let endDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '')
-                                currentDate.setHours(currentDate.getHours() - 4);
-                                let startDate = currentDate.toISOString().replace(/T/, ' ').replace(/\..+/, '')
-                                var url = obtainDataUrl(startDate, endDate, sensorId);
-                                Request(url, { json: true }, (err, response, body) => {
-                                    if (err) { 
-                                        res.status(500).json({"message":"Couldn't connect from data provider"})
-                                        return;
-                                    }
+                                const endDate = currentDate.add(2,'hour').format('YYYY-MM-DD HH:mm:ss');
+                                const startDate = currentDate.add(-2,'hour').format('YYYY-MM-DD HH:mm:ss');
+                                const url = obtainDataUrl(startDate, endDate, sensorId);
+                                try {
+                                    const response = await got(url, { json: true });
                                     if(response.body["measures"]) {
                                         res.status(200).json({ "data": response.body["measures"][response.body["measures"].length - 1]});
                                         return;
-                                    } else {
-                                        res.status(500).json({"message":"Couldn't get data from provider"})    
-                                        return;              
-                                    }  
-                                  });
-                            } else {
-                                res.status(400).json({"message": "Didn't find sensor with requested external id."});
-                                return 
+                                    } 
+                                    res.status(500).json({"message":"Couldn't get data from provider"})    
+                                    return;                
+                                } catch (error) {
+                                    res.status(500).json({"message":"Couldn't connect from data provider"})
+                                    return;
+                                }
                             }
-                
-                        })
-                    } else { 
-                        res.status(403).json({"message": "You didn't set sensorId parameter in body."});
-                   }
-                } else {
-                    res.status(400).json({"message": "User's main sensor is not set"});
-                }
-            } else {
-                res.status(400).json({"message": "Didn't find user with requested id."});
+                            res.status(400).json({"message": "Didn't find sensor with requested external id."});
+                            return           
+                        } 
+                    res.status(403).json({"message": "You didn't set sensorId parameter in body."});
+                    return
+                } 
+                res.status(400).json({"message": "User's main sensor is not set"});
+                return
             }
-        })
-    } else {
-        res.status(400).json({"message": "You didn't set userId parameter in body."});
-    }
-
+            res.status(400).json({"message": "Didn't find user with requested id."});
+            return
+        } 
+    res.status(400).json({"message": "You didn't set userId parameter in body."});
 }
 
-exports.addSensor = (req, res, next) => {
+exports.addSensor = async (req, res, next) => {
     if(req.user.isAdmin) {
         const sensorId = req.body.sensorId 
         const sensorName = req.body.sensorName
@@ -191,44 +174,42 @@ exports.addSensor = (req, res, next) => {
         const locationLon = req.body.locationLon
         const locationTimeZone = req.body.locationTimeZone
         const userKey = req.body.userKey
-        let insideBuilding = req.body.insideBuilding
+        const insideBuilding = req.body.insideBuilding
      
         if(sensorId != null) {
             if(insideBuilding == null) {
                 res.status(400).json({"message": "Didn't set sensor insideBuilding parameter"});
+                return
              } else {
-            return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
-                if(sensor) {
+                const sensor = await Sensor.findOne({ where: { externalIdentifier: sensorId }})
+                if(sensor != null) {
                     res.status(409).json({"message": "Sensor already exists"});
+                    return;
                 } else {
-                return Sensor.create({ externalIdentifier: sensorId, name: sensorName, locationName: locationName, locationLat: locationLat, locationLon:locationLon, locationTimeZone: locationTimeZone, isInsideBuilding: insideBuilding, key: userKey }).then(
-                        product => {
-                            if(product) {
-                                res.status(201).json({"message": "Sensor created"});
-                            } else {
-                                res.status(500).json({"message": "Database error"});
-                            }
-                        }
-                    )
+                    const product = await Sensor.create({ externalIdentifier: sensorId, name: sensorName, locationName: locationName, locationLat: locationLat, locationLon:locationLon, locationTimeZone: locationTimeZone, isInsideBuilding: insideBuilding, key: userKey })        
+                    if(product) {
+                        res.status(201).json({"message": "Sensor created"});
+                        return
+                    } 
+                    res.status(500).json({"message": "Database error"});
+                    return;
                 }
-            })
-        }
-        } else {
-            res.status(400).json({"message": "Didn't set external sensorId"});
-        }
-    } else {
-        res.status(403).json({"message": "No rights to this operation."});
+            } 
+        }       
+        res.status(400).json({"message": "Didn't set external sensorId"});
+        return
     }
+    res.status(403).json({"message": "No rights to this operation."});
 }
 
-exports.addSensorToUser = (req, res, next) => {
+exports.addSensorToUser = async (req, res, next) => {
     if(req.user.isAdmin) {
-        let sensorId = req.body.sensorId 
-        let userId = req.body.userId
-        let defaultSensor = req.body.defaultSensor
+        const sensorId = req.body.sensorId 
+        const userId = req.body.userId
+        const defaultSensor = req.body.defaultSensor
         if(sensorId) {
             if(userId) {
-                return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
+                const sensor = await Sensor.findOne({ where: { externalIdentifier: sensorId }})
                     if(sensor) {
                         return User.findOne({ where: { id: userId }}).then( user => {
                             if(user != null) {
@@ -251,22 +232,21 @@ exports.addSensorToUser = (req, res, next) => {
                     } else {
                         res.status(400).json({"message": "Didn't find requested sensor"});
                     }
-                })
-            } else {
+                return
+                } 
                 res.status(400).json({"message": "Didn't set userId"});
+                return;
             }
-        } else {
-            res.status(400).json({"message": "Didn't set external sensorId"});
-        }
-    } else {
-        res.status(403).json({"message": "No rights to this operation."});
+        res.status(400).json({"message": "Didn't set external sensorId"});
+        return
     }
+    res.status(403).json({"message": "No rights to this operation."});
 }
 
-exports.removeSensorFromUser = (req, res, next) => {
+exports.removeSensorFromUser = async (req, res, next) => {
     if(req.user.isAdmin) {
-        let userId = req.body.userId 
-        let sensorId = req.body.sensorId 
+        const userId = req.body.userId 
+        const sensorId = req.body.sensorId 
         if(userId) {
             return User.findOne({ where: { id: userId }}).then( user => {
                 if(user) {
@@ -282,25 +262,24 @@ exports.removeSensorFromUser = (req, res, next) => {
                                     res.status(201).json({"message": "Sensor deleted"});
                                 }
                             })
-                        } else {
-                            res.status(400).json({"message": "Didn't find sensor with requested id."});
-                        }
+                        } 
+                        res.status(400).json({"message": "Didn't find sensor with requested id."});
+
                     })
-                } else {
-                    res.status(400).json({"message": "Didn't find user with requested id."});
-                }
+                } 
+                res.status(400).json({"message": "Didn't find user with requested id."});
             })
-        } else {
-            res.status(400).json({"message": "You didn't set userId parameter in body."});
-        }
-    } else {
-        res.status(403).json({"message": "No rights to this operation."});
-    }
+        } 
+        res.status(400).json({"message": "You didn't set userId parameter in body."});
+
+    } 
+    res.status(403).json({"message": "No rights to this operation."});
+    
 }
 
-exports.removeSensor = (req, res, next) => {
+exports.removeSensor = async (req, res, next) => {
     if(req.user.isAdmin) {
-        let sensorId = req.query.sensorId 
+        const sensorId = req.query.sensorId 
         if(sensorId != null) {
             return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
                 if(sensor != null) {
@@ -319,10 +298,10 @@ exports.removeSensor = (req, res, next) => {
     }
 }
 
-exports.setSensorAsMain = (req, res, next) => {
-    let userId = req.user.id 
+exports.setSensorAsMain = async (req, res, next) => {
+    const userId = req.user.id 
     if(userId != null) {
-        let sensorId = req.body.sensorId 
+        const sensorId = req.body.sensorId 
         if(sensorId != null) {
             return Sensor.findOne({ where: { externalIdentifier: sensorId }}).then( sensor => {
                 if(sensor != null) {
@@ -340,17 +319,14 @@ exports.setSensorAsMain = (req, res, next) => {
                     res.status(422).json({"message": "Didn't find sensor you requested"});
                 }
             })
-        } else {
-            res.status(400).json({"message": "Didn't set external sensorId"});
-        }
-    } else {
+        } 
+        res.status(400).json({"message": "Didn't set external sensorId"});
+    } 
+    res.status(500).json({"message": "internal error"});
 
-    }
 }
 
 function obtainDataUrl(startDate, endDate, deviceId){
-    console.log(startDate);
-    console.log(endDate);
     return primaryDataUrl + startDateParamaterName + startDate + endDateParamaterName + endDate + deviceParameterUrl + deviceId
 }
 

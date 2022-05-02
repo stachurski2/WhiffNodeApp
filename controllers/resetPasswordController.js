@@ -8,10 +8,8 @@ exports.getResetPasswordForm = (req, res, next) => {
                  res.status(200).render('resetPassword', {secret: req.query.secret, email: user.email});
             }
             res.status(403).json({"message": "Didn't find requested user"});
-
         })
-    } else {
-        res.status(401).json({"message": "No rights to this operation"});
-    }
+    } 
+    res.status(401).json({"message": "No rights to this operation"});
 }
 
