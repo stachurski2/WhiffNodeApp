@@ -13,6 +13,10 @@ const Sensor = database.sequelize.define('Sensor', {
         type: Sequelize.INTEGER,
         allowNull: false
     },
+    key: {
+        type: Sequelize.STRING,
+        allowNull: true
+    },
     name: {
         type: Sequelize.STRING,
         allowNull: true
@@ -27,6 +31,14 @@ const Sensor = database.sequelize.define('Sensor', {
     },
     locationLon: {
         type: Sequelize.DOUBLE,
+        allowNull: true
+    },
+    locationTimeZone: {
+        type: Sequelize.DOUBLE,
+        allowNull: true
+    },
+    isInsideBuilding: {
+        type: Sequelize.BOOLEAN,
         allowNull: true
     }
 });

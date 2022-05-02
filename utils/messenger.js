@@ -1,10 +1,12 @@
 var nodemailer = require('nodemailer');
 
 var transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.EMAILHOST,
+  port: 587,
+  secure: false,
   auth: {
-    user: 'stachurski2@gmail.com',
-    pass: 'qgzpfabmrqrpdrpg'
+    user: process.env.EMAIL,
+    pass:  process.env.EMAILPASSWORD
   }
 });
 
@@ -12,7 +14,7 @@ class Messenger {
   
     static sendEmail(adress, title, text) {
         var mailOptions = {
-            from: 'noreply@whiff.zone',
+            from: process.env.EMAIL,
             to: adress,
             subject: title,
             text: text

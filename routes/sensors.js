@@ -8,6 +8,10 @@ router.get('/allSensors', sensorController.getAllSensors);
 
 router.get('/sensorData', sensorController.getDataFromSensor);
 
+router.get('/lastPieceOfDataFromSensor', sensorController.getLastPieceOfDataFromSensor)
+
+router.get('/currentStateData', sensorController.currentStateData)
+
 router.post('/addSensor', sensorController.addSensor);
 
 router.post('/addSensorToUser', sensorController.addSensorToUser);

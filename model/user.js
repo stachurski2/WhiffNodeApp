@@ -32,8 +32,11 @@ const User = database.sequelize.define('User', {
     resetPasswordKey: {
         type: Sequelize.STRING,
         allowNull: true
-    }
-
+    },
+    mainSensorId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+    },
 });
 
 module.exports = User;

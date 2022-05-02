@@ -1,0 +1,22 @@
+{   
+    "dev": {
+        "EMAIL": "noreply@whiff.zone",
+        "EMAIL_PASSWORD": "xHT2lnNhN#FP",
+        "DATABASE_NAME":"da3a5ttkqjb75",
+        "DATABASE_PASSWORD":"a85197736f17034381e6b4eb46914a8edbc836056e09af19c06134ce46abe2aa",
+        "DATABASE_HOST":"ec2-34-253-148-186.eu-west-1.compute.amazonaws.com",
+        "DATABASE_LOGIN":"aknmfhbxkdgykz"
+    },
+
+    "prod": {
+        "EMAIL": "noreply@whiff.zone",
+        "EMAIL_PASSWORD": "xHT2lnNhN#FP",
+        "DATABASE_NAME":"da3a5ttkqjb75",
+        "DATABASE_PASSWORD":"a85197736f17034381e6b4eb46914a8edbc836056e09af19c06134ce46abe2aa",
+        "DATABASE_HOST":"ec2-34-253-148-186.eu-west-1.compute.amazonaws.com",
+        "DATABASE_LOGIN":"aknmfhbxkdgykz"
+    }
+  
+
+  }
+  
