@@ -45,59 +45,46 @@ exports.login = (req, res, next) => {
     }
 };
 
-exports.registerUser = (req, res, next) => {
-    var email = req.body.email 
-    var name = req.body.name
+exports.registerUser = async (req, res, next) => {
+    const email = req.body.email 
+    let name = req.body.name
     if(name == null) {
         name = "noname"
     } 
 
     if(email) {
-       if(validateEmail(email)) {
-            const password = req.body.password 
-            if (password) {
-               if(password.length > 3 ) {
-                return User.findOne({ where: { email: email }}).then( user => {
-                    if(user) {
-                        res.status(409).json({"message": "Email is already taken "});
-                    } else {
-                        return bcrypt.hash(password, 12).then (hashedPassword => {
-                            if(hashedPassword != null) {
-                        return User.create({email: email,
-                        name: name,
-                        passwordHash: hashedPassword,
-                        active: false,
-                        isAdmin: Authentication.authentication.shouldBeAdmin(email)}).then(
-                            user => {
-                                if(user) {
-                                    res.status(201).json({"message": "Account created",
-                                                            "token": Authentication.authentication.getTokenFor(email, password)});
-                                                            
-                            } else {
-                                    res.status(500).json({"message": "Database error"});
-                                }
-                            }
-                        )
-                            } else {
-                                res.status(500).json({"message": "Database error"});
-
-                            }
-
-                    }) 
-                    } 
-                })
-               } else {
-                   res.status(400).json({"message": "Password must contain at least 3 characters"});
-               }
-            } else {
-                res.status(400).json({"message": "You didn't set password"});
-            }
-       } else {
-          res.status(400).json({"message": "email incorrect"});
-       }
-    } else {
-        res.status(400).json({"message": "You didn't set email"});
-    }
+        if(validateEmail(email)) {
+             const password = req.body.password 
+             if(password) {
+                if(password.length > 3 ) {
+                     const user = await User.findOne({ where: { email: email }})
+                     if(user) {
+                         res.status(409).json({"message": "Email is already taken "});
+                         return
+                     } else {
+                        const hashedPassword = await bcrypt.hash(password, 12)
+                        if(hashedPassword != null) {
+                            const user = await User.create({email: email,
+                                                             name: name,
+                                                     passwordHash: hashedPassword,
+                                                           active: false,
+                                                          isAdmin: Authentication.authentication.shouldBeAdmin(email)})
+                            if(user) {
+                                return res.status(201).json({"message": "Account created",
+                                                        "token": Authentication.authentication.getTokenFor(email, password)});
+                            } 
+                            return res.status(500).json({"message": "internal error"});
+                        } 
+                        return res.status(500).json({"message": "internal error"});
+                    }
+                 }
+                 return res.status(400).json({"message": "Password must contain at least 3 characters"});    
+             }
+             return res.status(400).json({"message": "You didn't set password"});
+         } 
+         return res.status(400).json({"message": "email incorrect"});
+     } 
+     return res.status(400).json({"message": "You didn't set email"});
 }
 
 exports.remindPassword = (req, res, next) => {  
