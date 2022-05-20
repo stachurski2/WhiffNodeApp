@@ -12,6 +12,7 @@ exports.login = async (req, res, next) => {
         if (password) {  
             const user = await User.findOne({ where: { email: email}})
             if(user) {
+                try {
                 const hashedPassword = await bcrypt.hash(password, 12)
                 if(hashedPassword) {
                     if(user.passwordHash == password) {
@@ -20,13 +21,17 @@ exports.login = async (req, res, next) => {
                                                 "authMethod": "Basic"});
 
                     }
-                    const result = await bcrypt.compare(password, user.passwordHash)
-                    if(result == true) {
-                        return res.status(200).json({"message": "Authorization Succeded",
-                                                       "token": Authentication.authentication.getTokenFor(email, password),
-                                                  "authMethod": "Basic"});
-                    } 
-                    return res.status(401).json({"message": "Bad credientials"});
+              
+                        const result = await bcrypt.compare(password, user.passwordHash)
+                         if(result == true) {
+                            return res.status(200).json({"message": "Authorization Succeded",
+                                                           "token": Authentication.authentication.getTokenFor(email, password),
+                                                       "authMethod": "Basic"});
+                        } 
+                        return res.status(401).json({"message": "Bad credientials"});
+                    }
+                }  catch(error) {
+                    return res.status(500).json({"message":"internal error"});
                 } 
                 return res.status(403).json({"message": "Bad credientials"});                
             }
@@ -131,7 +136,7 @@ exports.saveNewPassword = async (req, res, next) => {
     if(req.body.secret) {
         const user = await User.findOne({ where: { resetPasswordKey: req.body.secret }})
         if(user) {
-            if(req.body.password == req.body.repeatPassword) {
+            if(req.body.password == req.body.repeatPassword && req.body.password != null) {
                 if(req.body.password.length > 3 ) {
                     const hashedPassword = await bcrypt.hash(req.body.password,12)
                     if(hashedPassword) {

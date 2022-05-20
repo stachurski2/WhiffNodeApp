@@ -3,17 +3,17 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 
-router.post('/registerUser', userController.registerUser);
+router.post('/registerUser', userController.registerUser); // ok
 
-router.post('/loginUser', userController.login);
+router.post('/loginUser', userController.login); //ok 
 
-router.get('/userList', userController.userList);
+router.get('/userList', userController.userList); // ok
 
-router.post('/resetPassword', userController.remindPassword);
+router.post('/resetPassword', userController.remindPassword); //ok
 
-router.delete('/deleteUser', userController.deleteUser);
+router.delete('/deleteUser', userController.deleteUser); // ok 
 
-router.post('/saveNewPassword', userController.saveNewPassword)
+router.post('/saveNewPassword', userController.saveNewPassword) //ok
 
 router.post('/changePassword', userController.changePassword)
 
