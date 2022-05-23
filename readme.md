@@ -47,7 +47,7 @@ parameters:
 
 method: DELETE 
 
-url: /deleteSensor
+url: /deleteSensor 
 
 parameters:
 
@@ -69,7 +69,7 @@ parameters:
 
 method: GET
 
-url: /registerUser
+url: /loginUser
 
 parameters:
 

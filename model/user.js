@@ -28,7 +28,15 @@ const User = database.sequelize.define('User', {
     isAdmin: {
         type: Sequelize.BOOLEAN,
         allowNull: false
-    }
+    },
+    resetPasswordKey: {
+        type: Sequelize.STRING,
+        allowNull: true
+    },
+    mainSensorId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+    },
 });
 
 module.exports = User;

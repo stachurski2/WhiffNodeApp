@@ -1,4 +1,5 @@
 # Logs
+.vscode/launch.json
 logs
 *.log
 npm-debug.log*
@@ -116,3 +117,4 @@ dist
 .pnp.*
 
 node_modules/
+procfile
