@@ -1,12 +1,12 @@
 var nodemailer = require('nodemailer');
 
 var transporter = nodemailer.createTransport({
-  host: "smtp.zenbox.pl",
+  host: process.env.EMAILHOST,
   port: 587,
   secure: false,
   auth: {
-    user: "noreply@whiff.zone",
-    pass: "xHT2lnNhN#FP"
+    user: process.env.EMAIL,
+    pass:  process.env.EMAILPASSWORD
   }
 });
 
@@ -14,7 +14,7 @@ class Messenger {
   
     static sendEmail(adress, title, text) {
         var mailOptions = {
-            from: 'noreply@whiff.zone',
+            from: process.env.EMAIL,
             to: adress,
             subject: title,
             text: text
