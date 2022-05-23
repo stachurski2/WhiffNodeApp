@@ -15,9 +15,9 @@ router.delete('/deleteUser', userController.deleteUser); // ok
 
 router.post('/saveNewPassword', userController.saveNewPassword) //ok
 
-router.post('/changePassword', userController.changePassword)
+router.post('/changePassword', userController.changePassword) //ok
 
-router.post('/requestDemo', userController.requestDemo);
+router.post('/requestDemo', userController.requestDemo); //ok
 
 router.post('/requestAddSensor', userController.addSensor);
 

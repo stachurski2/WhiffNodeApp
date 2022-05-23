@@ -217,10 +217,9 @@ exports.addSensor = async (req, res, next) => {
                                 user.mainSensorId = sensor.externalIdentifier;
                             }
                             await user.save();
-                            res.status(201).json({"message": "sensor added"});
+                            return res.status(201).json({"message": "sensor added"});
                         } else {
-                            res.status(400).json({"message": "Invalid sensor key"});
-
+                            return res.status(400).json({"message": "Invalid sensor key"});
                         }
                     } 
                      return res.status(400).json({"message": "Didn't find requested sensor."}); 
@@ -247,7 +246,7 @@ exports.deleteSensor = async (req, res, next) => {
                     if(user.mainSensorId == sensors[0].externalIdentifier) {
                         user.mainSensorId = null
                         await user.save()
-                        res.status(201).json({"message": "Sensor deleted"});
+                        return res.status(201).json({"message": "Sensor deleted"});
                     } 
                     return res.status(201).json({"message": "Sensor deleted"});
                 } 
