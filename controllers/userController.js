@@ -39,7 +39,8 @@ exports.login = async (req, res, next) => {
         }
         return res.status(400).json({"message": "You didn't set password"});
     } 
-    res.status(400).json({"message": "You didn't set email"});
+     res.status(400).json({"message": "You didn't set email"});
+     return;
 }
 
 exports.registerUser = async (req, res, next) => {

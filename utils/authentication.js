@@ -9,6 +9,7 @@ class Authentication {
 
     static authorize(req, res, next) {
         const User = require('../model/user');
+        try {
         if(req.path == "/registerUser" || req.path == "/loginUser" || req.path == "/resetPassword" || req.path == "/resetPasswordForm" ||  req.path == "/saveNewPassword" || req.path == "/favicon.ico" ||  req.path.split("/")[1] == "public") {
             next();
             return;
@@ -38,6 +39,9 @@ class Authentication {
              })
   
         }
+        } catch(error) {
+            return res.status(500).json({"message":"Not authetincated"});
+        } 
     } 
 
     static shouldBeAdmin(email) {
