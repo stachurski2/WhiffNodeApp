@@ -4,7 +4,8 @@ const Sensor = require("../model/sensor");
 const Authentication = require("../utils/authentication");
 const Messenger = require("../utils/messenger");
 const bcrypt = require('bcryptjs');
- 
+const Sequelize = require('sequelize');
+
 exports.login = async (req, res, next) => {
     const email = req.body.email 
     if(email) {
@@ -61,8 +62,9 @@ exports.registerUser = async (req, res, next) => {
                          return
                      } else {
                         const hashedPassword = await bcrypt.hash(password, 12)
+
                         if(hashedPassword != null) {
-                            const user = await User.create({email: email,
+                            const user = await  User.create({email: email,
                                                              name: name,
                                                      passwordHash: hashedPassword,
                                                            active: false,
@@ -74,7 +76,7 @@ exports.registerUser = async (req, res, next) => {
                             return res.status(500).json({"message": "internal error"});
                         } 
                         return res.status(500).json({"message": "internal error"});
-                    }
+                   }
                  }
                  return res.status(400).json({"message": "Password must contain at least 3 characters"});    
              }
