@@ -91,19 +91,27 @@ exports.remindPassword = async (req, res, next) => {
     const email = req.body.email 
     const emailTitle = "Whiff - password reset query"
     const keygen = new KeyGenerator()
-    const user = await User.findOne({ where: { email: email}})   
-    if(user) {
-        user.resetPasswordKey = keygen.generateKey();
-        const adress = "https://whiffdev.herokuapp.com/resetPasswordForm?secret=" + user.resetPasswordKey; 
-        const emailText = "Hello, \n \n Likely, you requested reset email. \n Link: " + adress + "\n If you didn't requested, ignore this email. \n Regards, \n Whiff Team \n \n Please do not reply this email. "
-        await user.save()
-        const result = await Messenger.messenger.sendEmail(email, emailTitle, emailText)  
-        if(result.accepted.length > 0) {
+    if(email) {
+        if(validateEmail(email)) {
+            const user = await User.findOne({ where: { email: email}})   
+            if(user) {
+                user.resetPasswordKey = keygen.generateKey();
+                const adress = "https://whiffdev.herokuapp.com/resetPasswordForm?secret=" + user.resetPasswordKey; 
+                const emailText = "Hello, \n \n Likely, you requested reset email. \n Link: " + adress + "\n If you didn't requested, ignore this email. \n Regards, \n Whiff Team \n \n Please do not reply this email. "
+                await user.save()
+                const result = await Messenger.messenger.sendEmail(email, emailTitle, emailText)  
+                if(result.accepted.length > 0) {
+                    return res.status(200).json({"message": "request succeeded"});
+                } 
+                return res.status(500).json({ "message": "send email failed"});
+            } 
             return res.status(200).json({"message": "request succeeded"});
-        } 
-        return res.status(500).json({ "message": "send email failed"});
-    } 
-    res.status(200).json({"message": "request succeeded"});
+        } else {
+            return res.status(400).json({"message": "did not set correct payload"});
+        }
+    }
+    return res.status(400).json({"message":"missing data"});
+
         
 }
 

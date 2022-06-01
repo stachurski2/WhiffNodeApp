@@ -8,6 +8,8 @@ const User = require("../model/user");
 const bcrypt = require('bcryptjs');
 const Authentication = require("../utils/authentication");
 const Sequelize = require('sequelize');
+const Messenger = require("../utils/messenger");
+const { user } = require("pg/lib/defaults");
 
 
 describe('UserController - register', async function()  {
@@ -110,7 +112,7 @@ describe('UserController - register', async function()  {
         const testEmail = "test@test.com"
         const password = "tester"
         const stub1 = sinon.stub(User, 'findOne')
-        const stub2 = sinon.stub(Sequelize.Model, 'create')
+        const stub2 = sinon.stub(User, 'create')
         stub1.resolves(null)
         stub2.resolves(null);
         testRegister(testEmail, password, 500, () => {
@@ -119,6 +121,60 @@ describe('UserController - register', async function()  {
             stub2.restore();
         });
     });
+});
+
+describe('UserController - remindPassword', async function()  {
+    it('sent nothing', function(done){
+        testRemindPassword(null, 400, done);
+    });
+
+    it('sent incorrect string', function(done){
+        testRegister("testtest.com", null, 400, done);
+    });
+
+    it('sent email, user does not exist', function(done){
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves(null)
+        testRemindPassword('test@test.com', 200, () => {
+            done();
+            stub1.restore();
+        });
+    });
+
+    it('sent email, user exists, email sent success', function(done){
+        this.timeout(5000); 
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves({"id":0,
+                        save: function(){}})
+        const stub2 = sinon.stub(Messenger.messenger, 'sendEmail')
+        stub2.resolves({"accepted": {
+            "length":1
+        }});
+
+        testRemindPassword('test@test.com', 200, () => {
+            done();
+            stub1.restore();
+            stub2.restore();
+        });
+    });
+
+    it('sent email, user exists, email sent failed', function(done){
+        this.timeout(5000); 
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves({"id":0,
+                        save: function(){}})
+        const stub2 = sinon.stub(Messenger.messenger, 'sendEmail')
+        stub2.resolves({"accepted": {
+            "length":0
+        }});
+
+        testRemindPassword('test@test.com', 500, () => {
+            done();
+            stub1.restore();
+            stub2.restore();
+        });
+    });
+
 });
 
 function testLogin(email, password, expectedStatusCode, done) {
@@ -163,8 +219,29 @@ function testRegister(email, password, expectedStatusCode, done) {
     UserController.registerUser(req, res, () => {}).then(function(result) {
         chai.expect(res.statusCode).to.equal(expectedStatusCode);
         done();
-    })
-    
+    }) 
+}
+
+function testRemindPassword(email, expectedStatusCode, done) {
+    const req = {
+        body: {
+            "email":email,
+        }
+    }
+
+    const res = {
+        send: function(){},
+        json: function(d) {},
+        status: function(s) {
+            this.statusCode = s;
+            return this;
+        }
+    }
+
+    UserController.remindPassword(req, res, () => {}).then(function(result) {
+        chai.expect(res.statusCode).to.equal(expectedStatusCode);
+        done();
+    }) 
 }
 
 
