@@ -142,7 +142,6 @@ describe('UserController - remindPassword', async function()  {
     });
 
     it('sent email, user exists, email sent success', function(done){
-        this.timeout(5000); 
         const stub1 = sinon.stub(User, 'findOne')
         stub1.resolves({"id":0,
                         save: function(){}})
@@ -159,7 +158,6 @@ describe('UserController - remindPassword', async function()  {
     });
 
     it('sent email, user exists, email sent failed', function(done){
-        this.timeout(5000); 
         const stub1 = sinon.stub(User, 'findOne')
         stub1.resolves({"id":0,
                         save: function(){}})
@@ -174,6 +172,58 @@ describe('UserController - remindPassword', async function()  {
             stub2.restore();
         });
     });
+});
+
+describe('UserController - userDelete', async function() {
+    it('attempted deleted user if user is not admin', function(done){
+        testDeleteUser(false, null, 403, done);
+    });
+
+    it('attempted deleted user if user is not admin', function(done){
+        testDeleteUser(false, "someId", 403, done);
+    });
+
+    it('attempted deleted some user if user is admin, did not set userId', function(done){
+        testDeleteUser(true, null, 400, done);
+    });
+
+    it('attempted deleted some user if user is admin, set userId, did not found specified user', function(done){
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves(null);
+        testDeleteUser(true, "someUserId", 422, () => {
+            done();
+            stub1.restore();
+        }); 
+    });
+
+    it('attempted deleted some user if user is admin, set userId, found specified user', function(done){
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves({"id":0,
+                        destroy: function(){},
+                        save: function(){}})
+        testDeleteUser(true, "someUserId", 202, () => {
+            done();
+            stub1.restore();
+        }); 
+    });
+});
+
+    describe('UserController - userList', async function() {
+        it('attempted get list if user is not admin', function(done){
+            testUserList(false, 403, done);
+        });
+    
+        it('attempted get list  if user is admin', function(done){
+            const stub1 = sinon.stub(User, 'findAll')
+            stub1.resolves([{"id":0,
+                            destroy: function(){},
+                            save: function(){}}])
+
+            testUserList(true, 200, () => {
+                done();
+                stub1.restore();
+            });
+        });
 
 });
 
@@ -244,6 +294,53 @@ function testRemindPassword(email, expectedStatusCode, done) {
     }) 
 }
 
+function testDeleteUser(isAdmin, userId, expectedStatusCode, done) {
+
+    const req = {
+        query:{
+            "userId":userId
+        },
+        user: {
+            isAdmin: isAdmin
+        }
+    }
+
+    const res = {
+        send: function(){},
+        json: function(d) {},
+        status: function(s) {
+            this.statusCode = s;
+            return this;
+        }
+    }
+
+    UserController.deleteUser(req, res, () => {}).then(function(result) {
+        chai.expect(res.statusCode).to.equal(expectedStatusCode);
+        done();
+    }) 
+}
 
 
 
+function testUserList(isAdmin, expectedStatusCode, done) {
+
+    const req = {
+        user: {
+            isAdmin: isAdmin
+        }
+    }
+
+    const res = {
+        send: function(){},
+        json: function(d) {},
+        status: function(s) {
+            this.statusCode = s;
+            return this;
+        }
+    }
+
+    UserController.userList(req, res, () => {}).then(function(result) {
+        chai.expect(res.statusCode).to.equal(expectedStatusCode);
+        done();
+    })
+}
