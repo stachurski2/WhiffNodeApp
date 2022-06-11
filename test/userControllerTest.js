@@ -224,6 +224,79 @@ describe('UserController - userDelete', async function() {
                 stub1.restore();
             });
         });
+    });
+
+
+describe('UserController - save new password', async function() {
+    it('attempted save new password, without secret key', function(done){
+        testSaveNewPassword(null, null, null, 401, done);
+    });
+
+    it('attempted save new password, with secret key, but user not found', function(done){
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves(null)
+        testSaveNewPassword("testKey", null, null, 403, () => {
+            done();
+            stub1.restore();
+        });
+    });
+
+    it('attempted save new password, with secret key,  user found, no passwords', function(done){
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves({"id":0,
+                 destroy: function(){},
+                 save: function(){}})
+        testSaveNewPassword("testKey", null, null, 400, () => {
+            done();
+            stub1.restore();
+        });
+    });
+
+    it('attempted save new password, with secret key,  user found, one password', function(done){
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves({"id":0,
+                 destroy: function(){},
+                 save: function(){}})
+        testSaveNewPassword("testKey", "testPassword", null, 400, () => {
+            done();
+            stub1.restore();
+        });
+    });
+
+    it('attempted save new password, with secret key,  user found, two diffrent passwords', function(done){
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves({"id":0,
+                 destroy: function(){},
+                 save: function(){}})
+        testSaveNewPassword("testKey", "testPassword", "testPassword1", 400, () => {
+            done();
+            stub1.restore();
+        });
+    });
+
+    it('attempted save new password, with secret key,  user found, two same passwords, short ones', function(done){
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves({"id":0,
+                 destroy: function(){},
+                 save: function(){}})
+        testSaveNewPassword("testKey", "ab", "ab", 400, () => {
+            done();
+            stub1.restore();
+        });
+    });
+
+    it('attempted save new password, with secret key,  user found, two same passwords, long ones', function(done){
+        const stub1 = sinon.stub(User, 'findOne')
+        stub1.resolves({"id":0,
+                 destroy: function(){},
+                 save: function(){}})
+        testSaveNewPassword("testKey", "testPassword", "testPassword", 202, () => {
+            done();
+            stub1.restore();
+        });
+   });
+
+    
 
 });
 
@@ -320,8 +393,6 @@ function testDeleteUser(isAdmin, userId, expectedStatusCode, done) {
     }) 
 }
 
-
-
 function testUserList(isAdmin, expectedStatusCode, done) {
 
     const req = {
@@ -340,6 +411,31 @@ function testUserList(isAdmin, expectedStatusCode, done) {
     }
 
     UserController.userList(req, res, () => {}).then(function(result) {
+        chai.expect(res.statusCode).to.equal(expectedStatusCode);
+        done();
+    })
+}
+
+function testSaveNewPassword(secretKey, password, repeatPassword, expectedStatusCode, done) {
+
+    const req = {
+        body: {
+            secret: secretKey,
+            password: password,
+            repeatPassword: repeatPassword
+        }
+    }
+
+    const res = {
+        send: function(){},
+        json: function(d) {},
+        status: function(s) {
+            this.statusCode = s;
+            return this;
+        }
+    }
+
+    UserController.saveNewPassword(req, res, () => {}).then(function(result) {
         chai.expect(res.statusCode).to.equal(expectedStatusCode);
         done();
     })
