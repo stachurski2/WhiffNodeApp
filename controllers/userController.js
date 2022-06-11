@@ -13,24 +13,14 @@ exports.login = async (req, res, next) => {
         if (password) {  
             const user = await User.findOne({ where: { email: email}})
             if(user) {
-                try {
-                const hashedPassword = await bcrypt.hash(password, 12)
-                if(hashedPassword) {
-                    if(user.passwordHash == password) {
+                try { 
+                    const result = await bcrypt.compare(password, user.passwordHash)
+                        if(result == true) {
                         return res.status(200).json({"message": "Authorization Succeded",
-                                                "token": Authentication.authentication.getTokenFor(email, password),
-                                                "authMethod": "Basic"});
-
-                    }
-              
-                        const result = await bcrypt.compare(password, user.passwordHash)
-                         if(result == true) {
-                            return res.status(200).json({"message": "Authorization Succeded",
-                                                           "token": Authentication.authentication.getTokenFor(email, password),
-                                                       "authMethod": "Basic"});
-                        } 
-                        return res.status(401).json({"message": "Bad credientials"});
-                    }
+                                                        "token": Authentication.authentication.getTokenFor(email, password),
+                                                    "authMethod": "Basic"});
+                    } 
+                    return res.status(401).json({"message": "Bad credientials"});
                 }  catch(error) {
                     return res.status(500).json({"message":"internal error"});
                 } 
@@ -171,8 +161,8 @@ exports.saveNewPassword = async (req, res, next) => {
 }
 
 exports.changePassword = async (req, res, next) => {
-    let userId = req.user.id 
-    let password = req.body.password
+    const userId = req.user.id 
+    const password = req.body.password
     if(userId) {
         if(password) {
             const user = await User.findOne({ where: { id: userId }})
@@ -182,7 +172,7 @@ exports.changePassword = async (req, res, next) => {
                     if(hashedPassword) {
                         user.passwordHash = hashedPassword
                         await user.save()
-                        res.status(200).json({"message": "Password Changed",
+                        return res.status(202).json({"message": "Password Changed",
                                                 "token": Authentication.authentication.getTokenFor(user.email, req.body.password)});
                         
                     } 
@@ -194,7 +184,7 @@ exports.changePassword = async (req, res, next) => {
         }
         return res.status(400).json({"message": "You didn't set password parameter in body."});
     } 
-    res.status(400).json({"message": "You didn't set userId parameter in body."}); 
+    res.status(403).json({"message": "Unauthorized"}); 
 }
 
 
@@ -241,7 +231,7 @@ exports.addSensor = async (req, res, next) => {
         } 
         return res.status(400).json({"message": "You didn't set sensorId."});
     } 
-    return res.status(400).json({"message": "You didn't set sensorKey."});
+   res.status(400).json({"message": "You didn't set sensorKey."});
 }
 
 exports.deleteSensor = async (req, res, next) => {  
@@ -259,6 +249,7 @@ exports.deleteSensor = async (req, res, next) => {
                         await user.save()
                         return res.status(201).json({"message": "Sensor deleted"});
                     } 
+                    await user.save()
                     return res.status(201).json({"message": "Sensor deleted"});
                 } 
                 return res.status(400).json({"message": "Didn't find sensor with requested id."});
@@ -267,7 +258,7 @@ exports.deleteSensor = async (req, res, next) => {
         }
         return res.status(400).json({"message": "You didn't set userId parameter in body."});
     }
-    return res.status(400).json({"message": "You didn't set sensorId."});
+    res.status(400).json({"message": "You didn't set sensorId."});
 }
 
 function validateEmail(email) {
