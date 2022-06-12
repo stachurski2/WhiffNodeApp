@@ -81,7 +81,7 @@ exports.getDataFromSensor = async (req, res, next) => {
 
 exports.getLastPieceOfDataFromSensor = async (req, res, next) => {
     const sensorId = req.query.sensorId 
-    if(sensorId != null) {
+    if(sensorId) {
         const sensor = await Sensor.findOne({ where: { externalIdentifier: sensorId }})
             if(sensor) {
                 let currentDate = new dayjs().add(sensor.locationTimeZone, 'hour');
@@ -93,10 +93,10 @@ exports.getLastPieceOfDataFromSensor = async (req, res, next) => {
                 const url = obtainDataUrl(startDate, endDate, sensorId);
                 try {
                     const response = await got(url, { json: true });
-                        if(response.body["measures"]) {
-                            return res.status(200).json({ "data": response.body["measures"][response.body["measures"].length - 1]});
-                        } 
-                        return res.status(500).json({"message":"Couldn't get to data provider"})    
+                    if(response.body["measures"]) {
+                        return res.status(200).json({ "data": response.body["measures"][response.body["measures"].length - 1]});
+                    } 
+                    return res.status(500).json({"message":"Couldn't get to data provider"})    
                 } catch (error) {
                     return res.status(500).json({"message":"Couldn't connect to data provider"})
                     
@@ -104,7 +104,7 @@ exports.getLastPieceOfDataFromSensor = async (req, res, next) => {
             } 
             return res.status(400).json({"message": "Didn't find sensor with requested external id."});
         } 
-    res.status(403).json({"message": "You didn't set sensorId parameter in body."});
+    res.status(401).json({"message": "You didn't set sensorId parameter in body."});
 }
 
 exports.currentStateData = async (req, res, next) => {
