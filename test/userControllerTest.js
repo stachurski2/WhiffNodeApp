@@ -2,7 +2,6 @@ const chai = require("chai");
 const express = require('express');
 const authentication = require('../utils/authentication');
 const UserController = require('../controllers/userController');
-const { expect } = require("chai");
 const sinon = require("sinon");
 const User = require("../model/user");
 const Sensor = require("../model/sensor");
@@ -10,7 +9,6 @@ const bcrypt = require('bcryptjs');
 const Authentication = require("../utils/authentication");
 const Sequelize = require('sequelize');
 const Messenger = require("../utils/messenger");
-const { user } = require("pg/lib/defaults");
 
 
     describe('UserController - login', async function()  {
@@ -83,7 +81,6 @@ const { user } = require("pg/lib/defaults");
     });
 
     describe('UserController - register', async function()  {
-        sinon.restore();
         it('sent nothing', function(done){
             testRegister(null, null, 400, done);
         });
@@ -471,6 +468,101 @@ const { user } = require("pg/lib/defaults");
     describe('UserController - delete sensor from user', async function() {
         it('attempted to add user, no data sent', function(done){
             testDeleteSensorFromUser(null, null, null, 400, done)
+        });
+
+        it('attempted to add user, assigned user id', function(done){
+            testDeleteSensorFromUser("testUserId", null, null, 400, done)
+        });
+
+        it('attempted to add user, assigned user id, assigned sensor id, but user does not have any sensor', function(done){
+            const stub1 = sinon.stub(User, 'findOne')
+            stub1.resolves({"id":0,
+                         getSensors: function(){
+                             return []
+                         },
+                           save: function(){}})
+            testDeleteSensorFromUser("testUserId", "testSensorId", null, 400, () => {
+                stub1.restore();
+                done();
+            })
+        });
+
+
+        it('attempted to add user, assigned user id, assigned sensor id, but user has other sensors', function(done){
+            const stub1 = sinon.stub(User, 'findOne')
+            stub1.resolves({"id":0,
+                         getSensors: function(){
+                             return [{
+                                 externalIdentifier: "testSensorId1"
+                             }]
+                         },
+                           save: function(){}})
+            testDeleteSensorFromUser("testUserId", "testSensorId2", null, 400, () => {
+                stub1.restore();
+                done();
+            })
+        });
+
+        it('attempted to add user, assigned user id, assigned sensor id, user has other the sensor', function(done){
+            const sensorId = "testSensorId"
+            const stub1 = sinon.stub(User, 'findOne')
+            stub1.resolves({"id":0,
+                         getSensors: function(){
+                             return [{
+                                 externalIdentifier: sensorId
+                             }]
+                         },
+                         removeSensor: function(){},
+                           save: function(){}})
+            testDeleteSensorFromUser("testUserId", sensorId, null, 202, () => {
+                stub1.restore();
+                done();
+            })
+        });
+
+        it('attempted to add user, assigned user id, assigned sensor id, user has other main sensor', function(done){
+            const sensorId = "testSensorId"
+            const defaultSensorId = "otherSensorId"
+            const stub1 = sinon.stub(User, 'findOne')
+            var user = {"id":0,
+            getSensors: function(){
+                return [{
+                    externalIdentifier: sensorId
+                }]
+            },
+            removeSensor: function(){},
+              save: function(){
+                  if(this.mainSensorId == "otherSensorId") {
+                        done();
+                        stub1.restore();
+                  }
+                 
+              },
+              mainSensorId: "otherSensorId"}
+            stub1.resolves(user)
+            testDeleteSensorFromUser("testUserId", sensorId, true, 202, null)
+        });
+
+        it('attempted to add user, assigned user id, assigned sensor id, user has this main sensor', function(done){
+            const sensorId = "testSensorId"
+            const stub1 = sinon.stub(User, 'findOne')
+            var user = {"id":0,
+            getSensors: function(){
+                return [{
+                    externalIdentifier: sensorId
+                }]
+            },
+            removeSensor: function(){},
+              save: function(){
+                  if(this.mainSensorId == null) {
+                        done();
+                        stub1.restore();
+                  }
+                 
+              },
+              mainSensorId: sensorId}
+            stub1.resolves(user)
+            testDeleteSensorFromUser("testUserId", sensorId, true, 202, null)
         });
     });
 

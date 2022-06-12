@@ -33,9 +33,9 @@ exports.getSensorListForUser = async (req, res, next) => {
                     })
                     return res.status(200).json({"sensors":sensorsJson});
                 }
-                return res.status(400).json({"message": "Didn't find user with requested id."});
+                return res.status(500).json({"message": "internal error"});
             }
-            return res.status(500).json({"message": "internal error."});
+            return res.status(400).json({"message": "Didn't find user with requested id."});
         }
     res.status(400).json({"message": "You didn't set userId parameter in body."});
 };

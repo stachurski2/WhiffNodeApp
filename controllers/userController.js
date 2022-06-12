@@ -242,15 +242,15 @@ exports.deleteSensor = async (req, res, next) => {
             const user = await User.findOne({ where: { id: userId }})
             if(user) {
                 const sensors = await user.getSensors({ where:  { externalIdentifier: sensorId }})
-                if(sensors[0]) {
+                if(sensors[0] && sensors[0].externalIdentifier == sensorId) {
                     await user.removeSensor(sensors[0])
                     if(user.mainSensorId == sensors[0].externalIdentifier) {
                         user.mainSensorId = null
                         await user.save()
-                        return res.status(201).json({"message": "Sensor deleted"});
+                        return res.status(202).json({"message": "Sensor deleted"});
                     } 
                     await user.save()
-                    return res.status(201).json({"message": "Sensor deleted"});
+                    return res.status(202).json({"message": "Sensor deleted"});
                 } 
                 return res.status(400).json({"message": "Didn't find sensor with requested id."});
             } 
